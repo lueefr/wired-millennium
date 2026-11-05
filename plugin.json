@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/src/system/plugin-schema.json",
+  "name": "wired-millennium",
+  "common_name": "Wired",
+  "description": "Native Steam library actions, headless ACCELA downloads, external SLSsteam Moon, and integrated CloudRedirect.",
+  "version": "0.7.0",
+  "include": [
+    "public",
+    ".millennium"
+  ],
+  "useBackend": true,
+  "backendType": "lua"
+}

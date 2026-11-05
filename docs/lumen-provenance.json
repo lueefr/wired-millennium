@@ -1,0 +1,19 @@
+{
+  "repository": "https://github.com/swwayps/lumen",
+  "commit": "52475c3ec0bbe2bf0ccdd209d86a40d99a9881fa",
+  "copied_files": [
+    {
+      "upstream": "lua/restart_steam.sh",
+      "local": "backend/restart_steam.sh",
+      "sha256": "5692d99f216e3e853e6006ec02c790b7b69127de7fb076eb01b2cc1065dd6962",
+      "modified": false
+    }
+  ],
+  "behavior_references": [
+    "lua/cloudsettings.lua",
+    "lua/cloudremote.lua",
+    "lua/menu/12-cloud-tab.js",
+    "lua/boot.lua"
+  ],
+  "native_hook_reference": "https://github.com/swwayps/cloudredirect-moon/blob/master/src/platform/linux/cloud_hooks.cpp"
+}

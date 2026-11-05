@@ -1,0 +1,31 @@
+{
+  "accela": {
+    "version": "latest",
+    "asset": "deps.tar.gz",
+    "url": "https://github.com/ciscosweater/enter-the-wired/releases/download/latest/deps.tar.gz",
+    "updated_at": "2026-06-08T19:56:31Z",
+    "commit": "3cba346164cbb232da60dffe56f132cbeb13bcf6",
+    "sha256": {
+      "deps.tar.gz": "16322a5309058e4dff5bee43518628f3c5bd4cae17b1651932d3ade1d47a7b71",
+      "accela": "b85b0412637ce5f4f3914cf01f11f18c08190fee9d427026b7a9d4748ebbecb8"
+    }
+  },
+  "slssteam": {
+    "version": "v2.9",
+    "asset": "slsteam-moon-linux-2.9-lumen.zip",
+    "url": "https://github.com/swwayps/slsteam-moon/releases/download/v2.9/slsteam-moon-linux-2.9-lumen.zip",
+    "updated_at": "2026-10-22T15:49:48Z",
+    "expected_sha256": "c05d2328c9902673295cd76c2e299dc853ab760fd470d67d15377e5c10995c72",
+    "sha256": {
+      "slsteam-moon-linux-2.9-lumen.zip": "c05d2328c9902673295cd76c2e299dc853ab760fd470d67d15377e5c10995c72"
+    }
+  },
+  "cloudredirect": {
+    "version": "19da05507dc8294a744d74c04ba875d4ca3cf2f7",
+    "sha256": {
+      "cloud_redirect.so": "1395cc78939b9e349cc58471cd4c8a18654dec3d1629db7334f4b238172e6bae",
+      "cloud_redirect_cli": "f4d8e3f60c2f7a22f55523797584150d975bbe8e506c6e2c6256787123146c64",
+      "LICENSE": "e5d6554459e7f15943217b05aa33c2fddd6c8f9bbd1704d772b29963a1ddc951"
+    }
+  }
+}

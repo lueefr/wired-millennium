@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+dist/
+.millennium/Dist/
+settings.json
+*session*.json
+.env
+*.log
+backend/restart_steam.sh

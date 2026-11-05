@@ -1,0 +1,22 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python3 tools/build.py
+      - run: python3 -m unittest discover -s tests -v
+      - run: node tests/i18n-smoke.mjs
+      - run: bash -n install.sh uninstall.sh
+      - run: node --check .millennium/Dist/index.js && node --check .millennium/Dist/webkit.js

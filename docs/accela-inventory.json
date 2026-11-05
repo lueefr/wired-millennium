@@ -1,0 +1,1437 @@
+{
+  "version": "20260512201930",
+  "artifact_sha256": "16322a5309058e4dff5bee43518628f3c5bd4cae17b1651932d3ade1d47a7b71",
+  "modules": [
+    {
+      "module": "components/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "components/custom_widgets.py",
+      "sha256": "784645872da5cee9c5bc008e2f2154b2e6728834cabc0351c0615282c70ab488",
+      "lines": 103,
+      "classes": [
+        "ScaledLabel",
+        "ScaledFontLabel",
+        "ScaledButton"
+      ],
+      "functions": [
+        "__init__",
+        "setMovie",
+        "on_frame_changed",
+        "resizeEvent",
+        "__init__",
+        "resizeEvent",
+        "__init__",
+        "set_max_font_size",
+        "resizeEvent",
+        "setText",
+        "_scale_font"
+      ]
+    },
+    {
+      "module": "core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "core/appinfo_editor.py",
+      "sha256": "09b0973d418ddfa10711d76064a29e9c47b20db47ffbb13c7f7cbeb075bff7b1",
+      "lines": 302,
+      "classes": [
+        "AppInfoEditor"
+      ],
+      "functions": [
+        "get_appinfo_path",
+        "add_token_to_appinfo",
+        "__init__",
+        "read_appinfo",
+        "get_app",
+        "set_token",
+        "write_appinfo"
+      ]
+    },
+    {
+      "module": "core/ini_parser.py",
+      "sha256": "2a9c7a5f9cd60abe0a2aaab2285710e2a3b640ee363ab52a615f3ce6ff61e506",
+      "lines": 41,
+      "classes": [],
+      "functions": [
+        "parse_depots_ini"
+      ]
+    },
+    {
+      "module": "core/morrenus_api.py",
+      "sha256": "7d4564ba6721eba250a870c11096390a560ec083960f4311bbe87012a8fca18b",
+      "lines": 241,
+      "classes": [
+        "SSLAdapter"
+      ],
+      "functions": [
+        "_get_headers",
+        "_handle_request_exception",
+        "_make_json_request",
+        "search_games",
+        "get_user_stats",
+        "check_health",
+        "download_manifest",
+        "init_poolmanager"
+      ]
+    },
+    {
+      "module": "core/steam_api.py",
+      "sha256": "906b2118ef85d675ab29922cdd59956a7446186d36d0792e3cc9a5ce06a40442",
+      "lines": 515,
+      "classes": [],
+      "functions": [
+        "get_depot_info_from_api",
+        "_fetch_with_steam_client",
+        "_fetch_with_web_api",
+        "_parse_web_api_response",
+        "batched_get_product_info",
+        "get_manifest_id"
+      ]
+    },
+    {
+      "module": "core/steam_helpers.py",
+      "sha256": "397fc8f9fe203fd17cae11ca81d2cb4deb46015be20bac3e2cdd9611823621c9",
+      "lines": 443,
+      "classes": [],
+      "functions": [
+        "find_steam_install",
+        "_find_steam_windows",
+        "_find_steam_linux",
+        "parse_library_folders",
+        "get_steam_libraries",
+        "kill_steam_process",
+        "start_steam",
+        "start_steam_with_slssteam",
+        "run_dll_injector",
+        "get_library_index",
+        "slssteam_api_send",
+        "fix_greenluma_offline_mode",
+        "find_next_applist_number",
+        "app_id_exists_in_applist"
+      ]
+    },
+    {
+      "module": "core/tasks/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "core/tasks/application_shortcuts.py",
+      "sha256": "850c86bfa4b59763dfed124fe942459ec7da27b6808784eca3214b1d35c94fbf",
+      "lines": 209,
+      "classes": [
+        "ApplicationShortcutsTask"
+      ],
+      "functions": [
+        "__init__",
+        "set_api_key",
+        "stop",
+        "run",
+        "_get_game_data",
+        "_get_icon_url",
+        "_save_icons",
+        "_create_desktop_entry"
+      ]
+    },
+    {
+      "module": "core/tasks/download_depots_task.py",
+      "sha256": "a566bf2f73eebaaddac9fce87051449a04aa85c44bc05a63f44b88361265071e",
+      "lines": 460,
+      "classes": [
+        "DownloadDepotsTask"
+      ],
+      "functions": [
+        "__init__",
+        "is_running_flag",
+        "run",
+        "_read_process_output",
+        "_cleanup_temp_files",
+        "_flush_log_buffer",
+        "_handle_downloader_output",
+        "_prepare_downloads",
+        "stop",
+        "toggle_pause"
+      ]
+    },
+    {
+      "module": "core/tasks/download_monitor_task.py",
+      "sha256": "db2a7b15680b26ee06441f94eace532bdb387b01d7a07a0c4b2f95acdd6f3975",
+      "lines": 84,
+      "classes": [
+        "DownloadMonitorTask"
+      ],
+      "functions": [
+        "__init__",
+        "run",
+        "_get_folder_size",
+        "stop"
+      ]
+    },
+    {
+      "module": "core/tasks/generate_achievements_task.py",
+      "sha256": "c68e395c3a892ef16306165e19a1673cd8c0306552a8e659f36e48a9d7271a53",
+      "lines": 325,
+      "classes": [
+        "GenerateAchievementsTask"
+      ],
+      "functions": [
+        "__init__",
+        "run",
+        "_resolve_python_command",
+        "_handle_output",
+        "stop"
+      ]
+    },
+    {
+      "module": "core/tasks/manifest_check_task.py",
+      "sha256": "e34667f8914d635ed8017c496f526b0955537268ebd816cdcc6223845125ec37",
+      "lines": 242,
+      "classes": [
+        "ManifestCheckTask"
+      ],
+      "functions": [
+        "__init__",
+        "run",
+        "_check_game_update_with_batched_data",
+        "stop"
+      ]
+    },
+    {
+      "module": "core/tasks/monitor_speed_task.py",
+      "sha256": "31f18603a40a0a85c250d5381c609974daedb6ef9e55d217e0c41e300698ac86",
+      "lines": 52,
+      "classes": [
+        "SpeedMonitorTask"
+      ],
+      "functions": [
+        "__init__",
+        "run",
+        "_format_speed",
+        "stop"
+      ]
+    },
+    {
+      "module": "core/tasks/process_zip_task.py",
+      "sha256": "833f6b60b46db6e0e5e00723e59cd20d2df3c18b7590e1ac72ca7cc2ee29a953",
+      "lines": 337,
+      "classes": [
+        "ProcessZipTask"
+      ],
+      "functions": [
+        "_parse_lua",
+        "_extract_app_token",
+        "run"
+      ]
+    },
+    {
+      "module": "core/tasks/steamless_task.py",
+      "sha256": "5bec234a010462186b56a5cb1670ea29d23683e3c7e82d5f3af3b979b2132dd9",
+      "lines": 819,
+      "classes": [
+        "SteamlessIntegration",
+        "SteamlessTask"
+      ],
+      "functions": [
+        "__init__",
+        "find_game_executables",
+        "_should_skip_exe",
+        "_calculate_exe_priority",
+        "process_game_with_steamless",
+        "_run_steamless_on_exe",
+        "run_steamless_on_exe",
+        "terminate_process",
+        "__init__",
+        "_get_steamless_path",
+        "_setup_steamless_integration",
+        "set_game_directory",
+        "set_target_exe",
+        "run",
+        "_handle_progress",
+        "_handle_integration_error",
+        "_handle_integration_finished",
+        "stop",
+        "is_dotnet_available",
+        "get_steamless_path"
+      ]
+    },
+    {
+      "module": "main.py",
+      "sha256": "b610e999fd0eceacf2423b0729a70e9a41f4e01041ff12c40964db87c8969b26",
+      "lines": 274,
+      "classes": [],
+      "functions": [
+        "set_app_user_model_id",
+        "main",
+        "_add_zip_from_url",
+        "_parse_url_action",
+        "threaded_manifest_download",
+        "process_command_line_args",
+        "add_job_safely_patch"
+      ]
+    },
+    {
+      "module": "managers/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "managers/audio_manager.py",
+      "sha256": "35a7114a07c2ae50c131609fbef49a29f1974ae293aad12098eebf4d2a446afa",
+      "lines": 383,
+      "classes": [
+        "AudioManager"
+      ],
+      "functions": [
+        "__init__",
+        "apply_volume",
+        "validate_audio_files",
+        "setup_sounds",
+        "_resolve_sound_path",
+        "reload_sounds_for_ui_mode",
+        "apply_audio_settings",
+        "sync_preview_values_from_settings",
+        "preview_volume",
+        "on_app_about_to_quit",
+        "play_close_sound_and_wait",
+        "play_sound",
+        "_wait_for_playback",
+        "ensure_loop_playing",
+        "stop_loop",
+        "stop_all_sounds"
+      ]
+    },
+    {
+      "module": "managers/cli_manager.py",
+      "sha256": "d6834e2d093984cce13c8f00dbfb1aa2b36915be33f5c59a99c0bd1c72b00ba7",
+      "lines": 1100,
+      "classes": [
+        "CLITaskManager"
+      ],
+      "functions": [
+        "_get_terminal_command",
+        "open_cli_terminal",
+        "run_cli_mode",
+        "get_destination_path_cli",
+        "__init__",
+        "run_post_processing",
+        "_create_acf_file",
+        "_write_app_token",
+        "_move_manifests_to_depotcache",
+        "_save_main_depot_info",
+        "_persist_wrapper_metadata",
+        "_set_linux_binary_permissions",
+        "_apply_goldberg",
+        "_set_linux_permissions",
+        "_add_appids_to_slssteam_config",
+        "_run_steamless",
+        "_run_application_shortcuts",
+        "_run_achievement_generation",
+        "_create_greenluma_files",
+        "_create_applist_file",
+        "on_zip_processed",
+        "on_download_complete",
+        "detect_elf_architecture",
+        "on_achievement_complete"
+      ]
+    },
+    {
+      "module": "managers/db_manager.py",
+      "sha256": "ab0cf1fc11c869751713764356ed42f1bb2f2638cf6f46b6e97a12269a73079a",
+      "lines": 286,
+      "classes": [
+        "DatabaseManager"
+      ],
+      "functions": [
+        "_create_empty_db",
+        "_setup_database_path",
+        "_normalize_header_path",
+        "_construct_full_url",
+        "__new__",
+        "__init__",
+        "_connect_db",
+        "get_header_url",
+        "get_app_info",
+        "_decompress_depots",
+        "upsert_app_info",
+        "_try_partial_update",
+        "_perform_full_upsert",
+        "close",
+        "clear_app_info"
+      ]
+    },
+    {
+      "module": "managers/game_manager.py",
+      "sha256": "27123e96df7635af89e9227cdc51de40b232107e38d9956e6f881e982923b1ae",
+      "lines": 1511,
+      "classes": [
+        "GameManager"
+      ],
+      "functions": [
+        "__init__",
+        "_get_sorted_games",
+        "add_game",
+        "remove_game",
+        "get_game",
+        "get_all_games",
+        "select_game",
+        "update_game",
+        "_apply_filters",
+        "search_games",
+        "clear_filters",
+        "check_game_updates_async",
+        "_on_game_update_checked",
+        "_on_update_check_progress",
+        "_on_update_check_completed",
+        "_on_update_check_error",
+        "_on_manifest_check_runner_cleanup",
+        "scan_steam_libraries_async",
+        "cancel_scan",
+        "_perform_scan",
+        "_scan_library",
+        "_has_game_content",
+        "_get_accela_marker_path",
+        "_fix_slssteam_config",
+        "_sync_games_to_slssteam_config",
+        "_sync_app_tokens_from_manifests",
+        "_collect_game_data",
+        "_parse_acf_for_appid",
+        "_parse_acf_for_metadata",
+        "clear_library",
+        "import_library",
+        "get_library_stats",
+        "cleanup",
+        "cancel_update_checks",
+        "get_uninstall_confirmation_message",
+        "uninstall_game",
+        "_remove_linux_game_data",
+        "_remove_linux_shortcuts_and_icons",
+        "_remove_windows_game_data",
+        "_find_and_delete_greenluma_files",
+        "_collect_known_dlc_ids",
+        "_find_applist_files_for_ids",
+        "_read_manifest_dlc_ids",
+        "_infer_selected_dlcs_from_applist_and_manifest",
+        "_remove_dlc_files",
+        "do_scan",
+        "update_ui",
+        "extract_number"
+      ]
+    },
+    {
+      "module": "managers/gif_manager.py",
+      "sha256": "f05536e45614df1ecef18cfccad11d4e4af4229d73d222dec14314801938f7dd",
+      "lines": 960,
+      "classes": [
+        "ProgressDialog",
+        "GIFManager"
+      ],
+      "functions": [
+        "_get_stored_hash",
+        "__init__",
+        "update_progress",
+        "center_on_screen",
+        "__init__",
+        "_create_progress_dialog",
+        "process_gif_batch",
+        "_process_with_progress",
+        "_process_gifs_parallel_with_progress",
+        "_check_disable_color_gifs_setting_changed",
+        "_update_disable_color_gifs_setting",
+        "_cleanup_old_files",
+        "_find_unique_gifs",
+        "_check_regeneration",
+        "_process_gifs_parallel",
+        "_process_single_gif_thread_worker",
+        "_build_gif_batch_data",
+        "_prepare_gif_batch",
+        "_process_gif_batch_executor",
+        "_process_single_gif_thread",
+        "_apply_color_to_gif",
+        "_copy_gif_directly",
+        "_load_hashes",
+        "_write_hashes_file",
+        "_store_temp_hash",
+        "_calculate_gif_hash",
+        "_should_regenerate_gif",
+        "_process_frames",
+        "_apply_color_transform",
+        "_rgb_to_hsv_batch",
+        "_hsv_to_rgb_batch",
+        "_rgb_to_hsv",
+        "_save_gif",
+        "_update_color_symlinks",
+        "_create_color_symlink",
+        "_find_gif_source",
+        "on_progress",
+        "should_cancel"
+      ]
+    },
+    {
+      "module": "managers/job_queue_manager.py",
+      "sha256": "a69885accf84d7812c41c0ca3f77d1061335b31c4820e4013f0a967399aa84ba",
+      "lines": 283,
+      "classes": [
+        "JobQueueManager"
+      ],
+      "functions": [
+        "__init__",
+        "add_job",
+        "move_item_up",
+        "move_item_down",
+        "remove_item",
+        "_start_next_job",
+        "_handle_queue_completion",
+        "_update_ui_state",
+        "_update_queue_display",
+        "_check_if_safe_to_start_next_job",
+        "check_if_safe_to_start_next_job",
+        "_prompt_for_steam_restart",
+        "_perform_steam_restart",
+        "_show_message_safe",
+        "clear"
+      ]
+    },
+    {
+      "module": "managers/task_manager.py",
+      "sha256": "68a29700e4ad7e458eb87dbb67aa17c76cf1a1b1a39bfa16f1a3ee950dac2ae6",
+      "lines": 1892,
+      "classes": [
+        "TaskManager"
+      ],
+      "functions": [
+        "__init__",
+        "last_installed_game",
+        "start_zip_processing",
+        "_on_zip_processed",
+        "_show_depot_selection_dialog",
+        "_start_download_with_destination",
+        "_get_destination_path",
+        "_get_library_destination_path",
+        "_handle_slssteam_mode",
+        "_start_download",
+        "_start_speed_monitor",
+        "_stop_speed_monitor",
+        "_on_speed_monitor_stopped",
+        "_on_zip_task_stopped",
+        "_on_download_task_stopped",
+        "_on_download_complete",
+        "_run_finalize_io_worker",
+        "_finalize_acf_and_manifests",
+        "_persist_wrapper_metadata",
+        "_finalize_platform_specifics",
+        "_finalize_goldberg",
+        "_finalize_greenluma",
+        "_finalize_job_logic",
+        "_start_application_shortcuts_step",
+        "_should_prompt_for_steam_restart",
+        "_save_main_depot_info",
+        "_create_acf_file",
+        "_move_manifests_to_depotcache",
+        "_set_linux_binary_permissions",
+        "_create_steamless_task",
+        "_reset_steamless_task",
+        "_start_steamless_processing",
+        "run_steamless_manually",
+        "run_steamless_for_game",
+        "run_chmod_for_game",
+        "_ensure_game_directory",
+        "_detect_elf_architecture",
+        "apply_goldberg_to_game",
+        "remove_goldberg_from_game",
+        "_find_steam_api_dirs",
+        "_find_steam_api_backup_dirs",
+        "_apply_goldberg_to_single_dir",
+        "_backup_steam_api_files",
+        "_copy_goldberg_matching_files",
+        "_copy_goldberg_common_files",
+        "_write_appid_file",
+        "_generate_interfaces_for_valve_files",
+        "_run_generate_interfaces_for_file",
+        "_remove_goldberg_from_single_dir",
+        "_delete_goldberg_added_files",
+        "_restore_original_files",
+        "_run_chmod_recursive",
+        "_show_chmod_resume_dialog",
+        "_on_steamless_progress",
+        "_on_steamless_complete",
+        "_on_steamless_finished",
+        "_clear_steamless_task",
+        "_show_steamless_resume_dialog",
+        "_handle_steamless_task_error",
+        "_start_achievement_generation",
+        "_on_achievement_generation_complete",
+        "_handle_achievement_error",
+        "_on_achievement_task_cleanup",
+        "_on_application_shortcuts_task_cleanup",
+        "_start_application_shortcuts_processing",
+        "_on_application_shortcuts_complete",
+        "_handle_application_shortcuts_error",
+        "_add_appids_to_slssteam_config",
+        "_create_greenluma_applist_files",
+        "_copy_greenluma_bin_files",
+        "_find_next_applist_number",
+        "_app_id_exists_in_applist",
+        "_handle_task_error",
+        "job_finished",
+        "_update_status_button_color",
+        "toggle_pause",
+        "cancel_current_job",
+        "_detect_existing_installation",
+        "_confirm_delete_on_cancel",
+        "_kill_download_process",
+        "_cleanup_cancelled_job_files",
+        "download_slssteam",
+        "_handle_slssteam_progress",
+        "_handle_slssteam_progress_percentage",
+        "_on_slssteam_download_complete",
+        "_handle_slssteam_download_error",
+        "cleanup",
+        "get_component_status",
+        "_get_steamless_status_text",
+        "_update_status_for_job",
+        "chmod_worker",
+        "show"
+      ]
+    },
+    {
+      "module": "managers/ui_state_manager.py",
+      "sha256": "8fed576e496d6ca670fe3b2325efc363f99f835a08293d7b4b8bb941ba00ea38",
+      "lines": 479,
+      "classes": [
+        "UIStateManager"
+      ],
+      "functions": [
+        "__init__",
+        "_initialize_gifs",
+        "initialize_gifs",
+        "remove_old_downloading_gifs",
+        "_update_gifs",
+        "update_gifs",
+        "_reload_movies",
+        "reload_movies",
+        "setup_queue_panel",
+        "_setup_queue_buttons",
+        "apply_style_settings",
+        "_apply_background_color",
+        "_apply_accent_color",
+        "update_queue_visibility",
+        "_show_main_gif",
+        "show_main_gif",
+        "switch_to_download_gif"
+      ]
+    },
+    {
+      "module": "ui/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "ui/assets.py",
+      "sha256": "f88bbdf2ee28bc802324ce5f55f0372bfeef2ed8d5dd3bfe6fc04fc508da8f54",
+      "lines": 170,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "ui/bottom_titlebar.py",
+      "sha256": "90c4cc4e827a1de925c3cced3cb6688f84db8f5c9e4d7ab0377692b72d5c4f6c",
+      "lines": 433,
+      "classes": [
+        "ClickableLabel",
+        "BottomTitleBar"
+      ],
+      "functions": [
+        "__init__",
+        "mousePressEvent",
+        "__init__",
+        "_setup_ui",
+        "_create_left_section",
+        "_setup_navi_animation",
+        "_create_right_section",
+        "_apply_style",
+        "update_style",
+        "_update_button_styles",
+        "_update_button_colors",
+        "_update_colored_circle_button",
+        "update_colored_circle_button",
+        "_build_svg_pixmap",
+        "_update_svg_button_color",
+        "_create_svg_button",
+        "_create_colored_circle_button",
+        "_minimize_window",
+        "_maximize_window",
+        "_close_window",
+        "mousePressEvent"
+      ]
+    },
+    {
+      "module": "ui/dialogs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "ui/dialogs/chmod_resume.py",
+      "sha256": "3bca4dac0e3fa340bcccf82a316a324293392e9feb125679a5fbe3a077e0d339",
+      "lines": 96,
+      "classes": [
+        "ChmodResumeDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_setup_ui"
+      ]
+    },
+    {
+      "module": "ui/dialogs/credits.py",
+      "sha256": "9746a9862dc6a27239a0a96279507c0716a3f66b39b641fbbcdca5bf1a1cecd5",
+      "lines": 91,
+      "classes": [
+        "CreditsDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_create_credits_content"
+      ]
+    },
+    {
+      "module": "ui/dialogs/custom_gifs.py",
+      "sha256": "16faaf97806553f69c092f70c469c135e38cd693badef0eccfc59b8f1da71d15",
+      "lines": 671,
+      "classes": [
+        "CustomGifItem",
+        "CustomGifsDialog"
+      ],
+      "functions": [
+        "__init__",
+        "get_display_name",
+        "truncate_filename",
+        "check_existing_custom",
+        "get_custom_dir",
+        "upload_gif",
+        "remove_gif",
+        "view_gif",
+        "apply_changes",
+        "rollback_changes",
+        "__init__",
+        "setup_ui",
+        "create_gif_items",
+        "add_new_download_section",
+        "add_download_gif",
+        "remove_download_gif_item",
+        "get_temp_dir",
+        "_get_download_items",
+        "_cleanup_temp_dir",
+        "renumber_download_gifs",
+        "accept",
+        "reject"
+      ]
+    },
+    {
+      "module": "ui/dialogs/depotselection.py",
+      "sha256": "1284a1cafe356ad17359caca8db2b65877c669417bdde89f6ed981c5fb5f4efb",
+      "lines": 347,
+      "classes": [
+        "DepotSelectionDialog"
+      ],
+      "functions": [
+        "__init__",
+        "on_depot_item_clicked",
+        "_toggle_all_checkboxes",
+        "_fetch_header_image",
+        "on_image_fetched",
+        "_trigger_header_refresh",
+        "_on_retry_image_fetched",
+        "_apply_header_pixmap",
+        "_show_no_image",
+        "_cleanup_fetcher",
+        "_cleanup_retry_fetcher",
+        "get_selected_depots",
+        "closeEvent",
+        "get_sort_key"
+      ]
+    },
+    {
+      "module": "ui/dialogs/dialog_helpers.py",
+      "sha256": "6b95516af4d885318510f0b07eaeb3651f2c41774ee7800631f9fd99654feee4",
+      "lines": 10,
+      "classes": [],
+      "functions": [
+        "create_standard_buttons"
+      ]
+    },
+    {
+      "module": "ui/dialogs/dlcselection.py",
+      "sha256": "e314eb6772098353ee55a45b80d802e5c58ce6ec09aafd4f5681d9f817cbab1a",
+      "lines": 136,
+      "classes": [
+        "DlcSelectionDialog"
+      ],
+      "functions": [
+        "__init__",
+        "on_dlc_item_clicked",
+        "_toggle_all_checkboxes",
+        "get_selected_dlcs"
+      ]
+    },
+    {
+      "module": "ui/dialogs/fetchmanifest.py",
+      "sha256": "afc327e843121158fe68107892c654c5f68ee2db3b860320b6f1a3e4f681f9e2",
+      "lines": 593,
+      "classes": [
+        "FetchManifestDialog"
+      ],
+      "functions": [
+        "_get_cached_stats",
+        "_cache_stats",
+        "__init__",
+        "_init_ui",
+        "_create_api_status_bar",
+        "_request_api_status_update",
+        "_fetch_api_status",
+        "_apply_api_status",
+        "_on_api_status_error",
+        "on_search",
+        "_search_and_filter_results",
+        "_normalize_for_match",
+        "_relevance_score",
+        "_relevance_sort_key",
+        "_dedupe_results_by_name",
+        "_manifest_size",
+        "_is_likely_media_variant",
+        "on_search_finished",
+        "_is_blacklisted",
+        "_extract_game_name",
+        "_extract_app_id",
+        "_is_blacklisted_result",
+        "_add_game_to_list",
+        "_fetch_item_image",
+        "_on_image_ready",
+        "on_item_double_clicked",
+        "on_download_finished",
+        "_toggle_inputs",
+        "_handle_error",
+        "on_task_error",
+        "_stop_active_image_fetchers",
+        "closeEvent"
+      ]
+    },
+    {
+      "module": "ui/dialogs/gamelibrary.py",
+      "sha256": "658ebf5795c2d6e7821aee2aa6839319d6a4c139054ab5921a3d10a94a47a211",
+      "lines": 1192,
+      "classes": [
+        "GameItemWidget",
+        "GameLibraryDialog"
+      ],
+      "functions": [
+        "format_game_display_name",
+        "__init__",
+        "_init_ui",
+        "_add_status_label",
+        "set_image",
+        "sizeHint",
+        "__init__",
+        "_setup_window",
+        "_setup_ui",
+        "_connect_signals",
+        "_scan_for_games",
+        "_on_scan_complete",
+        "_check_if_updates_complete",
+        "_on_game_update_status_changed",
+        "_update_item_status",
+        "_on_sort_changed",
+        "_get_sort_key",
+        "_sort_games",
+        "_refresh_game_list",
+        "_add_game_to_list",
+        "_resolve_and_update_item",
+        "_resolve_appid_by_name",
+        "_update_item_with_resolved_id",
+        "_on_item_selected",
+        "_fetch_item_image",
+        "_cleanup_fetcher",
+        "_on_item_image_fetched",
+        "_check_appid_match",
+        "_update_item_image_if_match",
+        "_trigger_header_refresh",
+        "_apply_header_refresh",
+        "_show_game_details_dialog",
+        "_create_overview_tab",
+        "_add_fake_appid_controls",
+        "_create_uninstall_tab",
+        "_create_tools_tab",
+        "_check_goldberg_async",
+        "_on_goldberg_check_complete",
+        "_fetch_game_manifest",
+        "_handle_download_manifest",
+        "_download_manifest_async",
+        "_on_manifest_download_complete",
+        "_submit_job",
+        "_open_folder",
+        "_confirm_action",
+        "_uninstall_game",
+        "_uninstall_game_async",
+        "_on_uninstall_complete",
+        "_fix_game_install",
+        "_is_goldberg_applied",
+        "_format_size",
+        "closeEvent",
+        "slssteam_api_send",
+        "get_base_path",
+        "add_fake_app_id",
+        "get_fake_app_ids",
+        "get_fake_appid",
+        "get_user_config_path",
+        "is_slssteam_config_management_enabled",
+        "is_slssteam_mode_enabled",
+        "remove_fake_app_id",
+        "fetch_and_update",
+        "on_complete",
+        "_lbl",
+        "_toggle",
+        "_update_fake_id",
+        "_on_gb_click"
+      ]
+    },
+    {
+      "module": "ui/dialogs/lain.py",
+      "sha256": "48d17bb6123d25f87d456cd92daef1db347472c322b1841f8f75393bcaa3e587",
+      "lines": 695,
+      "classes": [
+        "LainMinigameDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_initialize_game_state",
+        "_setup_ui",
+        "_create_header",
+        "_create_stats_display",
+        "_create_terminal_display",
+        "_create_command_grid",
+        "_create_controls",
+        "_setup_timers",
+        "_create_button_handler",
+        "_print_welcome_message",
+        "_add_terminal_text",
+        "start_game",
+        "generate_new_sequence",
+        "command_clicked",
+        "_handle_correct_command",
+        "_handle_wrong_command",
+        "sequence_completed",
+        "_initiate_grace_period",
+        "add_bonus_time",
+        "update_timer",
+        "_update_grace_period",
+        "_update_game_timer",
+        "update_display",
+        "_update_time_bar_style",
+        "add_terminal_message",
+        "end_game",
+        "closeEvent"
+      ]
+    },
+    {
+      "module": "ui/dialogs/settings.py",
+      "sha256": "6dd95c0de878e1e93f3454808662cf5dae5b9fe0e0207a0b66a2dfeba5738930",
+      "lines": 1393,
+      "classes": [
+        "MorrenusStatsWidget",
+        "SettingsDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_setup_ui",
+        "refresh_stats",
+        "_display_error_state",
+        "_display_stats",
+        "_parse_int",
+        "_update_expiration_label",
+        "__init__",
+        "_setup_ui",
+        "_create_tab_widget",
+        "_setup_tabs",
+        "_create_dialog_buttons",
+        "_create_api_key_setting",
+        "_toggle_api_key_visibility",
+        "_create_downloads_tab",
+        "goldberg_checked_warning",
+        "goldberg_checked_warning_from_mode",
+        "goldberg_warning_box",
+        "_create_morrenus_tab",
+        "_on_tab_changed",
+        "_create_steam_tab",
+        "_create_tools_tab",
+        "_add_tool_button",
+        "_add_tool_explanation",
+        "_create_audio_tab",
+        "_create_style_tab",
+        "_add_checkbox_explanation",
+        "choose_accent_color",
+        "reset_accent_color",
+        "choose_bg_color",
+        "reset_bg_color",
+        "_is_too_dark",
+        "_is_too_close",
+        "_show_color_warning",
+        "choose_font",
+        "reset_font",
+        "update_font_button_text",
+        "on_titlebar_position_changed",
+        "on_gif_display_changed",
+        "accept",
+        "_save_general_settings",
+        "_save_download_settings",
+        "_save_audio_settings",
+        "_save_style_settings",
+        "reject",
+        "_is_steam_updates_blocked",
+        "_apply_steam_updates_block",
+        "_update_slssteam_status",
+        "_set_label_viz",
+        "_update_slssteam_hash_warning",
+        "_format_status_text",
+        "download_slssteam",
+        "run_slscheevo",
+        "_launch_terminal_command",
+        "run_steamless_manually",
+        "open_custom_gifs_dialog",
+        "clear_gif_cache",
+        "register_registry_entries",
+        "remove_registry_entries",
+        "_manage_registry",
+        "check"
+      ]
+    },
+    {
+      "module": "ui/dialogs/status.py",
+      "sha256": "5c3301b69ecaf01c5cc2676c7eb0486ba0f0d01df1ec9ff51b40c6bc2f5ff394",
+      "lines": 185,
+      "classes": [
+        "StatusDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_gather_status",
+        "_setup_ui",
+        "_create_header",
+        "_create_status_group",
+        "_create_footer_buttons",
+        "_create_status_row"
+      ]
+    },
+    {
+      "module": "ui/dialogs/steamless_resume.py",
+      "sha256": "7dcbc244935a136d82f283d978d35a95d9def68fee95f232d1d52455c190bd53",
+      "lines": 134,
+      "classes": [
+        "SteamlessResumeDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_setup_ui",
+        "_create_header",
+        "_create_separator",
+        "_create_stats_section",
+        "_get_status_style",
+        "_create_status_message",
+        "_create_buttons"
+      ]
+    },
+    {
+      "module": "ui/dialogs/steamlibrary.py",
+      "sha256": "05a2694bd984a81c973005940a678a1d2b39c8e9e7d6270f7cdaae282be0a715",
+      "lines": 77,
+      "classes": [
+        "SteamLibraryDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_setup_ui",
+        "accept",
+        "get_selected_path"
+      ]
+    },
+    {
+      "module": "ui/dialogs/style.py",
+      "sha256": "12cefc8d13607b6836d61e93a02485d92ef1e4929650e7aaf47b6a6250d3f431",
+      "lines": 360,
+      "classes": [
+        "StyleDialog"
+      ],
+      "functions": [
+        "__init__",
+        "_setup_ui",
+        "_setup_color_settings",
+        "_setup_font_settings",
+        "_load_current_font",
+        "_setup_checkboxes",
+        "_setup_dialog_buttons",
+        "on_gif_display_changed",
+        "on_titlebar_position_changed",
+        "update_font_button_text",
+        "reset_accent_color",
+        "reset_bg_color",
+        "reset_font",
+        "is_too_dark",
+        "is_too_close_to_accent_color",
+        "choose_accent_color",
+        "choose_bg_color",
+        "choose_font",
+        "accept"
+      ]
+    },
+    {
+      "module": "ui/main_window.py",
+      "sha256": "a2b3011d8b90e7a41fcbae7185025e37532b4ed5f17762c407a97fdc8f546ef3",
+      "lines": 562,
+      "classes": [
+        "ResizeHandle",
+        "MainWindow"
+      ],
+      "functions": [
+        "__init__",
+        "mousePressEvent",
+        "mouseMoveEvent",
+        "mouseReleaseEvent",
+        "_get_qt_edge",
+        "__init__",
+        "_setup_window_properties",
+        "_setup_exit_shortcut",
+        "_setup_key_sequence_detector",
+        "keyPressEvent",
+        "_on_lain_sequence_activated",
+        "open_lain_minigame",
+        "on_minigame_completed",
+        "_setup_windows_taskbar",
+        "_initialize_managers",
+        "_setup_ui",
+        "_setup_resize_handles",
+        "_get_cursor_for_edge",
+        "_update_resize_handles_geometry",
+        "resizeEvent",
+        "_create_main_content",
+        "_create_drop_zone",
+        "_create_progress_section",
+        "_create_bottom_section",
+        "update_gif_display",
+        "update_progress_bar_style",
+        "_update_progress_bar_style",
+        "open_settings",
+        "open_fetch_dialog",
+        "open_game_library",
+        "open_status_dialog",
+        "open_credits_dialog",
+        "dragEnterEvent",
+        "dropEvent",
+        "closeEvent",
+        "reposition_titlebar",
+        "_cleanup_logging"
+      ]
+    },
+    {
+      "module": "ui/text_menus.py",
+      "sha256": "7739b75b272c7ef27a251bee5fdfc3f9b38b0407473692705eee863455682e83",
+      "lines": 499,
+      "classes": [
+        "BaseTextMenu",
+        "CheckboxSelectionMenu",
+        "DepotSelectionMenu",
+        "DlcSelectionMenu",
+        "SteamLibraryMenu",
+        "DestinationPathMenu"
+      ],
+      "functions": [
+        "_create_and_run_menu",
+        "select_depots",
+        "select_dlcs",
+        "select_steam_library",
+        "select_destination_path",
+        "__init__",
+        "run",
+        "_get_palette",
+        "_handle_input",
+        "_on_checkbox_changed",
+        "_append_confirm_button",
+        "_build_list_layout",
+        "_build_menu",
+        "_create_header",
+        "_create_footer",
+        "__init__",
+        "_build_menu",
+        "_on_confirm_pressed",
+        "_create_item_widget",
+        "_get_item_text",
+        "_handle_input",
+        "_update_all_checkboxes",
+        "__init__",
+        "_get_item_text",
+        "_format_size",
+        "_build_menu",
+        "_calculate_os_priority",
+        "_calculate_lang_priority",
+        "_sort_depots",
+        "__init__",
+        "_get_item_text",
+        "__init__",
+        "_build_menu",
+        "_on_confirm_pressed",
+        "_create_library_item",
+        "_on_radio_changed",
+        "_handle_input",
+        "__init__",
+        "_build_menu",
+        "_handle_input",
+        "_handle_enter",
+        "get_sort_key"
+      ]
+    },
+    {
+      "module": "ui/theme.py",
+      "sha256": "aafad38007d417d0e4a7670f87de0a8132a5f1177510b8d25de2339b8aaffc1d",
+      "lines": 347,
+      "classes": [],
+      "functions": [
+        "normal_palette_colors",
+        "disabled_palette_colors",
+        "apply_palette",
+        "_apply_stylesheet",
+        "_resolve_font_path",
+        "_load_and_set_font",
+        "apply_font",
+        "update_appearance"
+      ]
+    },
+    {
+      "module": "utils/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lines": 0,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "utils/helpers.py",
+      "sha256": "176552db532faa70572539a0dc07e808be27840e3edc0ed440625de8e934f3fa",
+      "lines": 865,
+      "classes": [
+        "CheckboxSetting"
+      ],
+      "functions": [
+        "_get_user_dotnet_path",
+        "_get_user_dotnet_root",
+        "get_dotnet_path",
+        "install_dotnet_9",
+        "_install_dotnet_9_linux",
+        "_install_dotnet_9_windows",
+        "ensure_dotnet_availability",
+        "resource_path",
+        "get_base_path",
+        "_get_slscheevo_path",
+        "get_slscheevo_path",
+        "_ensure_template_file",
+        "_get_slscheevo_save_path",
+        "get_slscheevo_save_path",
+        "is_running_in_pyinstaller",
+        "check_venv",
+        "get_venv_path",
+        "get_venv_python",
+        "get_venv_activate",
+        "add_gradient_border",
+        "create_slider_setting",
+        "create_checkbox_setting",
+        "create_text_setting",
+        "create_color_setting",
+        "create_font_setting",
+        "create_font_from_settings",
+        "__init__",
+        "isChecked",
+        "setChecked",
+        "stateChanged",
+        "setToolTip",
+        "update_label",
+        "update_font_text"
+      ]
+    },
+    {
+      "module": "utils/image_fetcher.py",
+      "sha256": "3edb1e28556dc4fdb9df7830fb29e00b580d855c72a1488f6a5ebdf9106611dd",
+      "lines": 229,
+      "classes": [
+        "ImageFetcher"
+      ],
+      "functions": [
+        "get_network_manager",
+        "time_function",
+        "send_request",
+        "wrapper",
+        "__init__",
+        "stop",
+        "start",
+        "_on_finished",
+        "run",
+        "_get_best_image_url",
+        "get_header_image_url",
+        "fetch_header_from_web_api",
+        "get_capsule_image_url"
+      ]
+    },
+    {
+      "module": "utils/logger.py",
+      "sha256": "47c044d220fc37337df4303e1bc561da579fd59d39bdf6d900d9e153c326caaa",
+      "lines": 226,
+      "classes": [
+        "QtLogHandler"
+      ],
+      "functions": [
+        "_create_file_handler",
+        "setup_logging",
+        "open_log_directory",
+        "get_log_path",
+        "cleanup_old_logs",
+        "__init__",
+        "emit",
+        "flush",
+        "close"
+      ]
+    },
+    {
+      "module": "utils/paths.py",
+      "sha256": "6c898b211557c8596fb4c0dc5ecee83132059a1e2356a6cab7632ac1565c9604",
+      "lines": 50,
+      "classes": [
+        "Paths"
+      ],
+      "functions": [
+        "deps",
+        "resource",
+        "base",
+        "absolute",
+        "sound_path"
+      ]
+    },
+    {
+      "module": "utils/settings.py",
+      "sha256": "bebf389e47e06789d089fa5d7a8fefdb7d53e68dcf638a77a662e192138cb09c",
+      "lines": 9,
+      "classes": [],
+      "functions": [
+        "get_settings"
+      ]
+    },
+    {
+      "module": "utils/steam_manifest.py",
+      "sha256": "b23cc3a320f29df145e322e1c205abe8c111cfd7e0d624370cbe3a6b824eb540",
+      "lines": 176,
+      "classes": [],
+      "functions": [
+        "sanitize_game_name",
+        "get_install_folder_name",
+        "get_game_directory",
+        "_get_depot_platform",
+        "_build_platform_config",
+        "_build_depots_content",
+        "build_acf_content",
+        "write_acf_file"
+      ]
+    },
+    {
+      "module": "utils/task_runner.py",
+      "sha256": "122e02359e78d589658c047df08c0145fcfb7c1f494b48559621a8e31af4460a",
+      "lines": 147,
+      "classes": [
+        "Worker",
+        "TaskRunner"
+      ],
+      "functions": [
+        "__init__",
+        "run",
+        "__init__",
+        "run",
+        "stop",
+        "_cleanup",
+        "_request_task_stop",
+        "_on_destroyed",
+        "stop_all_active",
+        "_ensure_shutdown_hook"
+      ]
+    },
+    {
+      "module": "utils/version.py",
+      "sha256": "81779e51f28d20238a2fb8aa68620dfb0871167bf91dc22a1f0051a7051b45d5",
+      "lines": 24,
+      "classes": [],
+      "functions": [
+        "_load_version"
+      ]
+    },
+    {
+      "module": "utils/wrapper_metadata.py",
+      "sha256": "3bc6106cd7915e5cf2090d46a622469e2b09152458c0673a8699aa926ec7a226",
+      "lines": 68,
+      "classes": [],
+      "functions": [
+        "_get_wrapper_metadata_path",
+        "persist_selected_dlcs",
+        "load_selected_dlcs"
+      ]
+    },
+    {
+      "module": "utils/yaml_config_manager.py",
+      "sha256": "163cc5791276ad85ad273d85df49bfba12768a81d6f99af3585a415243d101ed",
+      "lines": 863,
+      "classes": [],
+      "functions": [
+        "_config_management_enabled",
+        "_read_config_content",
+        "_get_config_content_if_enabled",
+        "is_slssteam_mode_enabled",
+        "is_greenluma_wrapper_mode_enabled",
+        "is_slssteam_config_management_enabled",
+        "get_fake_appid_for_online",
+        "_create_backup",
+        "backup_config_on_startup",
+        "_atomic_write",
+        "ensure_slssteam_api_enabled",
+        "update_yaml_boolean_value",
+        "get_user_config_path",
+        "_get_section_start",
+        "_get_section_end",
+        "_remove_line_for_match",
+        "_remove_matching_entry",
+        "_fix_additional_apps_indentation",
+        "_get_app_tokens_section",
+        "_fix_app_tokens_indentation",
+        "fix_slssteam_config_indentation",
+        "_init_config_with_app",
+        "_append_to_additional_apps",
+        "add_additional_app",
+        "remove_additional_app",
+        "add_dlc_data",
+        "_atomic_write_and_log",
+        "add_app_token",
+        "get_app_tokens",
+        "get_fake_app_ids",
+        "get_fake_appid",
+        "add_fake_app_id",
+        "remove_fake_app_id"
+      ]
+    }
+  ]
+}
