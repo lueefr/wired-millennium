@@ -52,9 +52,28 @@ Controls inherit Steam's current theme. An external ACCELA job is displayed insi
 
 **Cloud:** choose a storage provider and manage achievement/playtime synchronization. Connection changes are staged because they may migrate data or restart Steam; **Save and restart** is the single explicit apply action. Advanced connection options are collapsed. Saved-game inventories are separate and paginated.
 
-**Tools:** local package import, custom sources, and component maintenance. A custom source is validated and saved as one operation, rather than persisting an incomplete URL.
+**Tools:** local package import, custom sources, and component update notices. A custom source is validated and saved as one operation, rather than persisting an incomplete URL.
 
 [Settings design and references](docs/settings-design.md)
+
+## Component update notifications
+
+Wired checks **SLSsteam Moon** and **CloudRedirect Moon** at **01:00, 07:00, 13:00 and 19:00**, using the computer's local timezone. A persistent user-systemd timer works while Steam is closed; the plugin provides a fallback while Steam is open when systemd activation is unavailable.
+
+Missed checks coalesce into one catch-up check. If the computer returns at **22:45**, Wired checks once at **22:45**, then again at **01:00**. The schedule is never shifted to six hours after the catch-up. A shared slot record prevents duplicate checks between the timer and plugin. At initial setup, the monitor records a baseline and compares known installed versions.
+
+The plugin monitors the default branch and published binary artifacts through GitHub's API rather than cloning full repositories. New revisions produce a native Steam dialog with the changelog. **Later** is remembered for that revision; a newer revision replaces the previous pending notification. Changes to source without a new binary are shown as source-only updates and cannot be installed as though a binary existed.
+
+**Download update** is explicit consent to prepare that component. Checksums, staged file integrity and ELF/CPU architecture are verified before installation. Installation waits for Steam to close; it does not stop games or restart Steam automatically. Existing cloud libraries are backed up. SLSsteam is updated through its upstream installer. A 32-bit artifact is rejected for a 64-bit Steam client; this monitor does not port incompatible components.
+
+When Steam is closed, notices wait until the plugin opens again. Monitor errors appear in Millennium logs when the plugin is running; scheduled checks also have a user journal:
+
+```bash
+systemctl --user list-timers wired-component-updates.timer
+journalctl --user -u wired-component-updates.service
+```
+
+Metadata and consent are stored privately in `wired-millennium/updates.json`. Approved update workers survive Steam closing. The uninstaller disables the timer and cancels pending operations before removing the plugin.
 
 ## Languages
 

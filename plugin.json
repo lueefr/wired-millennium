@@ -3,7 +3,7 @@
   "name": "wired-millennium",
   "common_name": "Wired",
   "description": "Native Steam library actions, headless ACCELA downloads, external SLSsteam Moon, and integrated CloudRedirect.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "include": [
     "public",
     ".millennium"

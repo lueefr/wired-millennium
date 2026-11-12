@@ -13,7 +13,7 @@ try:
 except ImportError:
     msgpack = None
 
-HOST = Path('/usr/lib/millennium/libmillennium_luavm_x86')
+HOST = next((path for path in (Path('/usr/lib/millennium/libmillennium_luavm_x64'),Path('/usr/lib/millennium/libmillennium_luavm_x86')) if path.exists()),Path('/usr/lib/millennium/libmillennium_luavm_x64'))
 BACKEND = Path(__file__).resolve().parents[1]/'backend'
 
 
@@ -24,7 +24,7 @@ class MillenniumHostTests(unittest.TestCase):
             root = Path(temporary)
             listener = socket.socket(socket.AF_UNIX)
             listener.bind(str(root/'parent.sock')); listener.listen(1); listener.settimeout(15)
-            env = dict(os.environ, XDG_RUNTIME_DIR=str(root), XDG_DATA_HOME=str(root/'data'))
+            env = dict(os.environ, WIRED_TEST_OFFLINE='1', XDG_RUNTIME_DIR=str(root), XDG_DATA_HOME=str(root/'data'))
             for key in ('LD_PRELOAD','LD_AUDIT','LD_LIBRARY_PATH','PYTHONHOME'):
                 env.pop(key, None)
             process = subprocess.Popen([str(HOST), str(root/'parent.sock')], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)

@@ -1,4 +1,4 @@
-"""Installer-only dependency. Never shipped to or invoked by the plugin backend."""
+"""Checksum-verified dependency installer, also used by explicitly approved updates."""
 import hashlib
 import json
 import os
@@ -30,13 +30,13 @@ def resolve():
     return {'repository': REPOSITORY, 'version': release['tag_name'], 'url': asset['browser_download_url'], 'asset': asset['name'], 'sha256': expected}
 
 
-def install():
-    info = resolve()
+def install(info=None,archive_path=None):
+    info = info or resolve()
     binary = Path.home()/'.local/share/SLSsteam/SLSsteam.so'
     receipt = ROOT/'dependencies/slsteam-moon.json'
     if receipt.exists() and binary.is_file():
         old = json.loads(receipt.read_text())
-        if old.get('version') == info['version'] and old.get('binary_sha256') == hashlib.sha256(binary.read_bytes()).hexdigest():
+        if old.get('version') == info['version'] and old.get('sha256') == info['sha256'] and old.get('binary_sha256') == hashlib.sha256(binary.read_bytes()).hexdigest():
             print("slsteam-moon dependency already installed:", info['version'])
             return info
     for name in ('steam', 'steamwebhelper'):
@@ -48,8 +48,12 @@ def install():
         archive = temp/info['asset']
         # Reuse a previously downloaded, verified release if available.
         reused = False
+        if archive_path is not None:
+            if hashlib.sha256(Path(archive_path).read_bytes()).hexdigest()!=info['sha256']:
+                raise ValueError('The staged SLSsteam archive failed verification')
+            shutil.copy2(archive_path,archive);reused=True
         previous = ROOT/'prepared.json'
-        if previous.exists():
+        if not reused and previous.exists():
             old = json.loads(previous.read_text())
             candidate = Path(old['directory'])/'slssteam'/info['asset']
             if candidate.is_file() and hashlib.sha256(candidate.read_bytes()).hexdigest() == info['sha256']:

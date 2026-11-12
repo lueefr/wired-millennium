@@ -205,7 +205,7 @@
       toggle('use_steamless','Run Steamless after installation'),toggle('auto_apply_goldberg','Apply Goldberg after installation'),toggle('generate_achievements','Generate Goldberg achievements'),
       h(Field,{label:'Steam downloads',description:'Adding a game never installs it. Start installation from your Steam library.'},h(Button,{onClick:action(()=>W.downloads())},'Open downloads')));
     else content=h('div',null,
-      h(Field,{label:'Components',description:'SLSsteam: '+(integration?.slssteam?.installed?'Installed':'Missing')+' · CloudRedirect: '+(integration?.cloudredirect?.installed?'Installed':'Missing')},h(Button,{onClick:action(async()=>{await W.run('cloud_update');setMessage('CloudRedirect updated. Restart Steam to load it.');})},'Update CloudRedirect')),
+      h(Field,{label:'Components',description:'SLSsteam: '+(integration?.slssteam?.installed?'Installed':'Missing')+' · CloudRedirect: '+(integration?.cloudredirect?.installed?'Installed':'Missing')},h(Button,{onClick:action(async()=>{const result=await W.rpc('GetComponentUpdates');const available=result.updates.filter(item=>['available','error'].includes(item.decision));if(available.length){for(const item of available)updateSeen.delete(item.component+':'+item.revision+':'+item.decision);await checkComponentUpdates();}else showMessage('Components','01:00 · 07:00 · 13:00 · 19:00');})},'View changes')),
       h('details',null,h('summary',null,'Local package'),h(Text,{label:'Package AppID',value:appid,onChange:setAppid}),h(Text,{label:'Local ZIP path',value:zip,onChange:setZip}),
         h(Button,{disabled:!zip||!/^\d+$/.test(appid),onClick:action(()=>W.run('manifest_import',{appid:Number(appid),zip_path:zip}))},'Add to library'),
         integration?.apps?.[String(Number(appid))]?.added&&integration?.apps?.[String(Number(appid))]?.installed?h(Button,{onClick:()=>openFixes(appid)},'lua.tools fixes'):null),
@@ -221,6 +221,37 @@
     const change=(key,value)=>setDraft({...draft,[key]:value});
     const valid=draft.url.startsWith('https://')&&draft.url.includes('<appid>');
     return h('div',null,h(Text,{label:'Source name',value:draft.name,onChange:value=>change('name',value)}),h(Text,{label:'HTTPS URL containing <appid>',value:draft.url,onChange:value=>change('url',value)}),h(Text,{label:'API key',password:true,value:draft.api_key,onChange:value=>change('api_key',value)}),h(Button,{disabled:!valid,onClick:()=>onCommit(draft)},'Save source'),h(Button,{onClick:onCancel},'Cancel'));
+  }
+  function ComponentUpdateDialog({update,onClose}){
+    const [current,setCurrent]=R.useState(update),[error,setError]=R.useState('');
+    R.useEffect(()=>{let active=true;const timer=setInterval(()=>W.rpc('GetComponentUpdates').then(value=>{const entry=value.updates.find(item=>item.component===update.component&&item.revision===update.revision);if(active&&entry)setCurrent(entry);}).catch(err=>{if(active)setError(String(err.message||err));}),2000);return()=>{active=false;clearInterval(timer);};},[update.component,update.revision]);
+    const busy=['preparing','queued'].includes(current.decision);
+    async function choose(decision){try{await W.rpc('RespondToComponentUpdate',{component:update.component,revision:update.revision,decision});if(decision==='later')onClose();else setCurrent({...current,decision:'preparing'});}catch(err){setError(String(err.message||err));}}
+    const title=update.component==='slssteam'?'SLSsteam Moon':'CloudRedirect Moon';
+    const status=current.decision==='preparing'?'Downloading and verifying the update…':current.decision==='queued'?'Update ready. Close Steam to install it, then reopen Steam.':current.decision==='installed'?'Update installed. Restart Steam to load it.':current.decision==='error'?current.error:!current.installable?'The source code changed, but no new installable binary has been published.':'Install this update? Files are verified first and installed only after Steam closes.';
+    return h(A.ModalRoot,{onCancel:()=>busy||current.decision==='installed'?onClose():choose('later')},h(A.DialogHeader||'h2',null,title+' — '+update.version),
+      h(A.DialogBody||'div',null,h(Field,{label:'Component update available',description:status}),
+        h('div',{style:{maxHeight:'16em',overflowY:'auto',whiteSpace:'pre-wrap',overflowWrap:'anywhere'},'aria-label':t('Changelog')},update.changes.join('\n\n')),
+        error?h(Field,{label:error}):null),
+      h(A.DialogFooter||'div',null,
+        ['available','error'].includes(current.decision)&&current.installable?h(Primary,{onClick:()=>choose('download')},'Download update'):null,
+        h(Button,{onClick:()=>window.SteamClient?.System?.OpenInSystemBrowser?window.SteamClient.System.OpenInSystemBrowser(update.url):window.SteamClient?.Browser?.OpenURL?.(update.url)},'View changes'),
+        h(Button,{onClick:()=>busy||current.decision==='installed'?onClose():choose('later')},busy||current.decision==='installed'?'Close':'Later')));
+  }
+  const updateSeen=new Set();let updateModal=null,checkingUpdates=false;
+  async function checkComponentUpdates(){
+    if(stopped||checkingUpdates||updateModal||!A.showModal||!A.ModalRoot)return;
+    checkingUpdates=true;
+    try{
+      const value=await W.rpc('GetComponentUpdates');
+      const update=value.updates?.find(item=>['available','error'].includes(item.decision)&&!updateSeen.has(item.component+':'+item.revision+':'+item.decision));
+      if(update){
+        updateSeen.add(update.component+':'+update.revision+':'+update.decision);
+        const close=()=>{updateModal?.Close();updateModal=null;};
+        updateModal=A.showModal(h(ComponentUpdateDialog,{update,onClose:close}),undefined,{strTitle:t('Component update available'),bNeverPopOut:true});
+      }
+    }catch(error){console.error('[Wired] Component update status unavailable',error);}
+    finally{checkingUpdates=false;}
   }
   function Prompt({job,prompt}){
     const [answer,setAnswer]=R.useState(prompt.multiple?(prompt.default||[]):prompt.kind==='confirm'?true:prompt.default||'');
@@ -275,11 +306,13 @@
   function attach(doc){if(doc?.documentElement){documents.add(doc);scan();}}
   attach(document);Millennium.AddWindowCreateHook?.(popup=>{try{attach(popup?.window?.document);}catch{}});
   const interval=setInterval(scan,750);
+  const updateInterval=setInterval(checkComponentUpdates,30000);
+  const updateStartup=setTimeout(checkComponentUpdates,2000);
   const props={title:'Wired',icon:h('svg',{viewBox:'0 0 24 24',width:20,height:20},h('path',{fill:'currentColor',d:'M6 18a4 4 0 0 1 0-8 6 6 0 0 1 11.7-1A4.5 4.5 0 1 1 18 18H6z'})),content:h(Settings)};
   (window.PLUGIN_LIST||={})[name]={...props,__millennium_internal_plugin_name_do_not_use_or_change__:name,
     OpenFixes:appid=>{openFixes(Number(appid));return JSON.stringify({success:true});},
-    RuntimeProbe:()=>JSON.stringify({documents:documents.size,version:'0.7.0',entries:Array.from(roots.values()).filter(v=>v.node.isConnected).length,native:true,lastError}),
-    onDismount(){stopped=true;clearInterval(interval);for(const value of roots.values()){value.root.unmount();value.node.remove();}roots.clear();W.destroy();}};
+    RuntimeProbe:()=>JSON.stringify({documents:documents.size,version:'0.8.0',entries:Array.from(roots.values()).filter(v=>v.node.isConnected).length,native:true,lastError}),
+    onDismount(){stopped=true;clearInterval(interval);clearInterval(updateInterval);clearTimeout(updateStartup);updateModal?.Close();for(const value of roots.values()){value.root.unmount();value.node.remove();}roots.clear();W.destroy();}};
   (window.MILLENNIUM_SIDEBAR_NAVIGATION_PANELS||={})[name]=props;
   window.MILLENNIUM_BACKEND_IPC?.postMessage(1,{pluginName:name});
 })();

@@ -13,7 +13,7 @@ import time
 from diagnostics import emit, drain
 
 MAX_REQUEST = 2*1024*1024
-METHODS = {'GetLanguage', 'GetSettings', 'SaveSettings', 'GetStatus', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'GetIntegrationState', 'GetLuaToolsAuthStatus', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudStatus', 'CloudAuthorize', 'CloudAuthPoll', 'CloudDiscard'}
+METHODS = {'GetComponentUpdates', 'RespondToComponentUpdate', 'GetLanguage', 'GetSettings', 'SaveSettings', 'GetStatus', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'GetIntegrationState', 'GetLuaToolsAuthStatus', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudStatus', 'CloudAuthorize', 'CloudAuthPoll', 'CloudDiscard'}
 
 
 def exchange(directory, payload):
@@ -46,6 +46,8 @@ def serve(directory, parent):
     directory.chmod(0o700)
     path = directory/'rpc.sock'
     import api
+    import updates
+    updates.start()
     class Handler(socketserver.StreamRequestHandler):
         def handle(self):
             uid = struct.unpack('3i', self.request.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))[1]
@@ -64,7 +66,7 @@ def serve(directory, parent):
                 if not isinstance(args, dict):
                     raise ValueError("Invalid arguments")
                 if method == 'Ping':
-                    value = {'success': True, 'version': '0.7.0'}
+                    value = {'success': True, 'version': '0.8.0'}
                 elif method == 'Shutdown':
                     value = {'success': True}; shutdown = True
                 elif method in METHODS:
@@ -102,6 +104,7 @@ def serve(directory, parent):
         try:
             server.serve_forever(poll_interval=.1)
         finally:
+            updates.STOP.set()
             api.manager.close()
             api.manager.thread.join(3)
             path.unlink(missing_ok=True)

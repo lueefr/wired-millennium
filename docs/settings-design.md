@@ -16,3 +16,5 @@ The design follows Steam's native controls, colors and type rather than introduc
 - No fixed-height clipping is used. Common screens are kept compact, but small windows, accessibility zoom or long translations may still need scrolling.
 
 These are engineering and heuristic decisions, not claims of user-tested usability. Automated checks verify behavior, localization and common viewport layouts; real Steam themes and native-speaker reviews remain useful.
+
+Component update dialogs use native modal controls and plain-text changelogs. The user can defer a revision persistently, or explicitly approve preparation and installation after Steam closes. Source-only changes never masquerade as installable binaries. Scheduled checks use fixed local times with a single catch-up run.

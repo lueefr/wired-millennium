@@ -27,6 +27,12 @@ if plugin.is_symlink() or data.is_symlink():raise SystemExit('Refusing to remove
 if plugin.exists():
     if json.loads((plugin/'plugin.json').read_text()).get('name')!='wired-millennium':raise SystemExit('The destination does not belong to Wired.')
     sys.path.insert(0,str(plugin/'backend'))
+    if (plugin/'backend/updates.py').exists():
+        from updates import cancel_pending
+        cancel_pending()
+    if (plugin/'backend/update_timer.py').exists():
+        from update_timer import remove as remove_update_timer
+        remove_update_timer()
     from moon import remove_integration
     for receipt in sorted((data/'apps').glob('*.json')):
         try:remove_integration(receipt.stem)

@@ -142,3 +142,23 @@ def CloudDiscard(**kwargs):
 def GetLanguage(**kwargs):
     from localization import steam_language
     return json.dumps({'language':steam_language()})
+
+
+_update_errors_seen = {}
+
+
+def GetComponentUpdates(**kwargs):
+    from updates import status
+    from diagnostics import emit
+    value=status()
+    errors={**value.get('errors',{}),**{item['component']:item.get('error','Component update failed') for item in value['updates'] if item['decision']=='error'}}
+    for component,message in errors.items():
+        identity=(message,value.get('checked_at'))
+        if _update_errors_seen.get(component)!=identity:
+            emit(component+': '+message,'warning');_update_errors_seen[component]=identity
+    return json.dumps(value)
+
+
+def RespondToComponentUpdate(component,revision,decision,**kwargs):
+    from updates import respond
+    return json.dumps(respond(component,revision,decision))

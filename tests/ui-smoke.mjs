@@ -32,10 +32,13 @@ ConfirmModal:({strTitle,onOK})=>h('div',null,strTitle,h('button',{onClick:onOK},
 showModal:element=>{const host=document.createElement('div');document.body.append(host);const root=ReactDOM.createRoot(host);root.render(element);return {Close:()=>{root.unmount();host.remove()}}},
 findClass:()=>null
 };
+const realInterval=window.setInterval;window.setInterval=(callback,delay,...args)=>{if(delay===30000)window.checkUpdatesForTest=callback;return realInterval(callback,delay,...args)};
 window.calls=[];window.tasks=[];window.job={id:'one',action:'download',appid:123,name:'Example <img src=x>',status:'working',message:'Downloading depot',percent:25,bytes:256,total:1024,bytes_estimated:true,speed:128,prompt:null};
 window.SteamClient={Installs:{OpenInstallWizard:ids=>calls.push({method:'InstallWizard',ids})},Browser:{OpenURL:url=>calls.push({method:'OpenURL',url})}};
 window.Millennium={AddWindowCreateHook:()=>{},callServerMethod:async(plugin,method,args)=>{
 const payload=JSON.parse(args.payload_json);method=payload.method;args=payload.args;calls.push({method,args});
+if(method==='GetComponentUpdates')return {updates:window.componentUpdates||[]};
+if(method==='RespondToComponentUpdate'){const update=(window.componentUpdates||[]).find(item=>item.component===args.component&&item.revision===args.revision);if(update)update.decision=args.decision==='later'?'dismissed':'preparing';return {success:true};}
 if(method==='GetLuaToolsAuthStatus')return {configured:false,status:'disconnected'};
 if(method==='StartLuaToolsLogin')return {success:true,auth_url:'https://db.lua.tools/auth/v1/authorize?provider=discord'};
 if(method==='CloudStatus')return {installed:true,provider:'local',sync_activity:false,providers:{local:{authenticated:false},folder:{settings:{sync_folder_path:''}},gdrive:{},onedrive:{},r2:{settings:{}},s3:{settings:{}}}};
@@ -120,6 +123,18 @@ return {success:true};
   await until(()=>evaluate(`calls.some(c=>c.method==='StartTask'&&c.args.action==='cloud_apply')`),'Cloud save missing');
   const cloudRequest=await evaluate(`JSON.parse(calls.find(c=>c.method==='StartTask'&&c.args.action==='cloud_apply').args.args_json)`);
   assert.equal(cloudRequest.provider,'folder');assert.equal(cloudRequest.sync_activity,true);assert.equal(cloudRequest.sync_folder_path,'/tmp/wired-fixture-folder');
+  await evaluate(`window.componentUpdates=[{component:'slssteam',revision:'test-update-1',version:'vNext',url:'https://github.com/swwayps/slsteam-moon',changes:['Fix compatibility <img src=x>'],installable:true,decision:'available'}];window.checkUpdatesForTest()`);
+  await until(()=>evaluate(`Boolean([...document.querySelectorAll('[data-modal]')].find(node=>node.textContent.includes('Fix compatibility <img src=x>')))`),'Native changelog popup missing');
+  assert.equal(await evaluate(`document.querySelectorAll('[data-modal] img').length`),0,'Changelog must be rendered as text');
+  await click('Later');
+  await until(()=>evaluate(`componentUpdates[0].decision==='dismissed'`),'Later must persist for this revision');
+  await evaluate(`window.checkUpdatesForTest()`);
+  assert.equal(await evaluate(`Boolean([...document.querySelectorAll('[data-modal]')].find(node=>node.textContent.includes('Fix compatibility <img src=x>')))`),false,'Dismissed updates must not repeat');
+  await evaluate(`componentUpdates[0]={...componentUpdates[0],revision:'test-update-2',decision:'available'};window.checkUpdatesForTest()`);
+  await until(()=>evaluate(`Boolean([...document.querySelectorAll('button')].find(node=>node.textContent==='Download update'))`),'New revision should notify again');
+  await click('Download update');
+  await until(()=>evaluate(`componentUpdates[0].decision==='preparing'`),'Update must require an explicit acceptance');
+  assert.equal(await evaluate(`calls.filter(c=>c.method==='RespondToComponentUpdate'&&c.args.decision==='download').length`),1);
   assert.deepEqual(errors,[]);console.log('UI smoke OK: native controls, progress, Hubcap save, lua.tools login, fixes, CloudRedirect draft and native achievement sync');
 
 }finally{if(ws)ws.close();browser.kill('SIGTERM');await new Promise(resolve=>browser.once('exit',resolve));await rm(directory,{recursive:true,force:true,maxRetries:3,retryDelay:100});}

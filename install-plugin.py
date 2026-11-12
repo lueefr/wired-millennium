@@ -13,7 +13,7 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--plugins-dir', type=Path, default=Path(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share')))/'millennium/plugins')
 parser.add_argument('--plugin-only', action='store_true', help="Update plugin files only (development)")
-parser.add_argument('--update', action='store_true', help='Atualizar Wired existente, mantendo backup')
+parser.add_argument('--update', action='store_true', help='Update an existing Wired installation, keeping a backup')
 args = parser.parse_args()
 source = Path(__file__).resolve().parent
 target = args.plugins_dir.expanduser()/'wired-millennium'
@@ -38,7 +38,7 @@ backup = None
 with tempfile.TemporaryDirectory(prefix='.wired-stage-', dir=target.parent) as temporary:
     staged = Path(temporary)/'wired-millennium'
     staged.mkdir()
-    for name in ('backend', 'public', 'locales', '.millennium', 'plugin.json'):
+    for name in ('backend', 'public', 'locales', 'tools', '.millennium', 'plugin.json'):
         item = source/name
         if item.is_dir():
             shutil.copytree(item, staged/name, ignore=shutil.ignore_patterns('__pycache__'))
@@ -55,6 +55,10 @@ with tempfile.TemporaryDirectory(prefix='.wired-stage-', dir=target.parent) as t
         if backup:
             shutil.move(str(backup), target)
         raise
+sys.path.insert(0,str(target/'backend'))
+from update_timer import install as install_update_timer
+if not install_update_timer(target):
+    print('Background timer could not be activated; fixed-slot checks will run while Steam is open.')
 print(f'Wired installed at {target}. Restart Steam and enable Wired in Millennium.')
 if backup:
     print(f'Previous backup: {backup}')

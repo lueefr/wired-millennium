@@ -74,7 +74,7 @@ local function on_load()
     if not ok or not result.success then error('Wired: engine startup failure:' .. tostring(output)) end
     running = true
     millennium.ready()
-    logger:info('Wired 0.7.0: Lua backend and internal engine ready')
+    logger:info('Wired 0.8.0: Lua backend and internal engine ready')
 end
 local function on_unload()
     if running then
