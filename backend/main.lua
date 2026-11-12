@@ -7,7 +7,7 @@ local service = backend .. '/service.py'
 local stat = assert(io.open('/proc/self/stat', 'r'))
 local pid = stat:read('*l'):match('^(%d+)')
 stat:close()
-local directory = (os.getenv('XDG_RUNTIME_DIR') or '/tmp') .. '/wired-' .. pid
+local directory = (os.getenv('HOME') or error('HOME unavailable')) .. '/.local/share/wired-millennium/ipc/wired-' .. pid
 local sequence = 0
 local running = false
 
@@ -15,6 +15,10 @@ local function quote(value)
     return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
 end
 local python = '/usr/bin/env -u LD_PRELOAD -u LD_AUDIT -u LD_LIBRARY_PATH -u PYTHONPATH -u PYTHONHOME /usr/bin/python3 '
+local _, launch_code = utils.exec('test -x /usr/bin/steam-runtime-launch-client')
+if launch_code == 0 then
+    python = '/usr/bin/steam-runtime-launch-client --alongside-steam -- ' .. python
+end
 local function forward(payload)
     sequence = sequence + 1
     local path = directory .. '/request-' .. sequence .. '.json'
