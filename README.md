@@ -8,15 +8,17 @@ A native Steam plugin that adds library actions, an internal ACCELA download eng
 
 ## Installation
 
-Close Steam, then run:
+Run the installer as your normal user:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/lueefr/wired-millennium/main/install.sh | bash
 ```
 
+The installer asks Steam to shut down, installs or updates Wired, launches Steam once to initialize Millennium, then stops Steam, enables Wired in Millennium's configuration, and launches Steam again automatically. It does not force-kill Steam; close any running games before installing. Other plugins and their settings are preserved. The previous Millennium configuration is backed up the first time Wired is enabled.
+
 The installer detects your distribution, checks native Steam and Millennium, installs missing prerequisites, and installs **Millennium → SLSsteam Moon → CloudRedirect → Wired**. Existing Millennium installations are kept. Arch-based distributions use `yay`, `paru`, or the AUR build workflow; other supported distributions use Millennium's official installer. NixOS users must enable the [official flake](https://docs.steambrew.app/users/getting-started/installation) first.
 
-Start Steam and enable **Wired** in **Millennium → Plugins**. Settings live in Millennium's plugin configuration panel.
+Wired is enabled automatically. Settings live in Millennium's plugin configuration panel.
 
 Inspect the plan without changing anything:
 
