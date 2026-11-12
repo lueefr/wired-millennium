@@ -82,6 +82,13 @@ else
 fi
 """)
             steam.chmod(0o755)
+            sls = home/'.local/share/SLSsteam'
+            wrapper = sls/'path/steam'
+            wrapper.parent.mkdir(parents=True)
+            wrapper.write_text('#!/bin/sh\\nprintf "sls-wrapper\\\\n" >> "$HOME/steam-events"\\nexec "$HOME/bin/steam" "$@"\\n')
+            wrapper.chmod(0o755)
+            (sls/'SLSsteam.so').touch()
+            (sls/'library-inject.so').touch()
             pgrep = fakebin/'pgrep'
             pgrep.write_text('#!/bin/sh\ntest -f "$HOME/.steam-on"\n')
             pgrep.chmod(0o755)
@@ -95,7 +102,7 @@ fi
                                     capture_output=True, text=True, timeout=35)
             self.assertEqual(result.returncode, 0, result.stdout+'\n'+result.stderr)
             self.assertEqual((home/'steam-events').read_text().splitlines(),
-                             ['stop', 'start', 'stop', 'start'])
+                             ['stop', 'sls-wrapper', 'start', 'stop', 'sls-wrapper', 'start'])
             settings = json.loads((home/'settings/millennium/config.json').read_text())
             self.assertEqual(settings['plugins']['enabledPlugins'], ['other-plugin', 'wired-millennium'])
             self.assertTrue((home/'.steam-on').exists())
