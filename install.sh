@@ -10,7 +10,7 @@ for argument in "$@"; do
   case "$argument" in
     --dry-run) DRY_RUN=1 ;;
     --plugin-only) PLUGIN_ONLY=1 ;;
-    --help) printf '%s\n' 'Usage: install.sh [--dry-run] [--plugin-only]' 'Close Steam first. --plugin-only updates Wired without changing dependencies.'; exit 0 ;;
+    --help) printf '%s\n' 'Usage: install.sh [--dry-run] [--plugin-only]' 'Automatically closes Steam, installs Wired, starts Steam, enables Wired and restarts Steam.' '--plugin-only updates Wired without changing dependencies.'; exit 0 ;;
     *) printf 'Unknown option: %s\n' "$argument" >&2; exit 2 ;;
   esac
 done
@@ -19,9 +19,39 @@ run() { if ((DRY_RUN)); then printf '[plan]'; printf ' %q' "$@"; printf '\n'; el
 die() { say "$*" >&2; exit 1; }
 [[ ${EUID} -ne 0 ]] || die 'Run this installer as your normal user, without sudo.'
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'Native Linux x86_64 Steam is required.'
+# Shut down the client through Steam itself so it can flush its state before files change.
+steam_running() {
+  pgrep -u "$(id -u)" -x steam >/dev/null || pgrep -u "$(id -u)" -x steamwebhelper >/dev/null
+}
+stop_steam() {
+  steam_running || return 0
+  say 'Asking Steam to shut down gracefully...'
+  "$STEAM_CMD" -shutdown >/dev/null 2>&1 || true
+  for ((attempt=0; attempt<90; attempt++)); do
+    steam_running || return 0
+    sleep 1
+  done
+  die 'Steam did not close within 90 seconds. Close any running games and retry; no process was force-killed.'
+}
+start_steam() {
+  say 'Starting Steam...'
+  "$STEAM_CMD" >/dev/null 2>&1 </dev/null &
+  disown || true
+  for ((attempt=0; attempt<90; attempt++)); do
+    if pgrep -u "$(id -u)" -x steam >/dev/null && [[ -f "$MILLENNIUM_CONFIG" ]]; then
+      sleep 2
+      if pgrep -u "$(id -u)" -x steam >/dev/null; then return 0; fi
+    fi
+    sleep 1
+  done
+  die 'Steam or the Millennium configuration did not become ready within 90 seconds.'
+}
+STEAM_CMD=''
+MILLENNIUM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/millennium/config.json"
 if ! ((DRY_RUN)); then
-  pgrep -x steam >/dev/null && die 'Close Steam before installing.'
-  pgrep -x steamwebhelper >/dev/null && die 'Close Steam before installing.'
+  STEAM_CMD=$(command -v steam || true)
+  [[ -n "$STEAM_CMD" ]] || die 'Native Steam launcher not found in PATH.'
+  stop_steam
 fi
 # Never guess a Steam path inside a Flatpak/Snap container.
 STEAM_ROOT=''
@@ -72,7 +102,7 @@ if ! ((PLUGIN_ONLY)); then
     esac
   fi
 fi
-if ((DRY_RUN)); then say 'Install SLSsteam Moon, then CloudRedirect, then Wired from the main branch. No release is required.'; exit 0; fi
+if ((DRY_RUN)); then say 'Install SLSsteam Moon, then CloudRedirect, then Wired from the main branch; shut down, start, enable and restart Steam automatically. No release is required.'; exit 0; fi
 for tool in curl python3 git tar unzip; do command -v "$tool" >/dev/null || die "Missing required tool: $tool"; done
 SCRIPT_DIRECTORY=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)
 if [[ -f $SCRIPT_DIRECTORY/install-plugin.py && -f $SCRIPT_DIRECTORY/plugin.json ]]; then
@@ -85,4 +115,12 @@ fi
 OPTIONS=(--update)
 ((PLUGIN_ONLY)) && OPTIONS+=(--plugin-only)
 python3 "$SOURCE_DIRECTORY/install-plugin.py" "${OPTIONS[@]}"
-say 'Installation complete. Start Steam and enable Wired in Millennium → Plugins.'
+# First launch initializes Millennium's config on new installations.
+say 'Installation complete. Initializing Millennium in Steam...'
+start_steam
+# Stop the client before editing its config: Millennium rewrites this file on shutdown.
+stop_steam
+python3 "$SOURCE_DIRECTORY/tools/enable_millennium.py" --config "$MILLENNIUM_CONFIG"
+say 'Wired enabled. Restarting Steam...'
+start_steam
+say 'Steam is running with Wired enabled.'
