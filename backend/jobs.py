@@ -201,7 +201,7 @@ class JobManager:
                     for key in finished[:-40]:
                         del self.jobs[key]
 
-    def _archive(self, job, config, directory):
+    def _archive(self, job, config, directory, publish=None):
         args = job['_args']
         archive = directory/'package.zip'
         if args.get('zip_path'):
@@ -211,7 +211,9 @@ class JobManager:
             import shutil
             shutil.copyfile(path, archive)
             validate_archive(archive)
-            return archive
+            if job['_cancel'].is_set():
+                raise InterruptedError("Canceled")
+            return publish(archive) if publish else archive
         appid = str(int(args['appid']))
         endpoints = []
         custom = [item for item in config.get('api_list', []) if item.get('enabled', True)]
@@ -224,6 +226,7 @@ class JobManager:
         if not endpoints:
             raise RuntimeError("Login to lua.tools or paste your Hubcap key into Wired settings on Millennium or import a local ZIP")
         self.log(job['id'], 'Provider order: '+', '.join(str(e.get('name','API')) for e in endpoints))
+        conflicts = []
         for attempt, endpoint in enumerate(endpoints, 1):
             started = time.monotonic()
             self.log(job['id'], f"Attempt {attempt}/{len(endpoints)}: {endpoint.get('name', 'API')}")
@@ -271,11 +274,24 @@ class JobManager:
                     self.log(job['id'], "Lua response converted to internal package; script not executed")
                 validate_manifest_package(archive,appid)
                 self.log(job['id'], str(endpoint.get('name','API'))+": package validated for AppID "+appid)
-                return archive
             except InterruptedError:
                 raise
             except Exception as exc:
                 self.log(job['id'], str(endpoint.get('name',"Provider"))+': '+type(exc).__name__+': '+str(exc)+f'; duration={time.monotonic()-started:.2f}s; trying next', 'warning')
+                continue
+            if job['_cancel'].is_set():
+                raise InterruptedError("Canceled")
+            if publish:
+                from moon import ManifestConflictError
+                try:
+                    return publish(archive)
+                except ManifestConflictError as exc:
+                    conflicts.append(str(exc))
+                    self.log(job['id'], str(endpoint.get('name','Provider'))+': '+str(exc)+f'; duration={time.monotonic()-started:.2f}s; trying next', 'warning')
+                    continue
+            return archive
+        if conflicts:
+            raise RuntimeError("No provider could import a package without conflicting with existing manifests: "+'; '.join(dict.fromkeys(conflicts)))
         raise RuntimeError("Providers did not return a valid package. Check the lua.tools login or Hubcap key in Wired settings.")
 
     def execute(self, job):
@@ -320,9 +336,7 @@ class JobManager:
                 from components import update_cloud
                 return update_cloud(lambda message:self.update(identity,message=message))
             with tempfile.TemporaryDirectory(prefix='manifest-',dir=ROOT) as temporary:
-                archive=self._archive(job,self.settings(),Path(temporary))
-                if job['_cancel'].is_set():raise InterruptedError("Canceled")
-                return import_package(archive,job['_args']['appid'])
+                return self._archive(job,self.settings(),Path(temporary),publish=lambda archive: import_package(archive,job['_args']['appid']))
         info = ensure_runtime(lambda message: self.update(identity, message=message))
         config = self.settings()
         ROOT.mkdir(parents=True, exist_ok=True)

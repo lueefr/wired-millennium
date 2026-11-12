@@ -13,6 +13,10 @@ from archive_utils import validate_archive
 from components import ROOT, write_json
 
 
+class ManifestConflictError(RuntimeError):
+    """An existing depotcache manifest has different content and must be preserved."""
+
+
 def steam_root():
     for root in (Path.home()/'.steam/steam', Path.home()/'.local/share/Steam'):
         if (root/'steamapps').is_dir() and (root/'config').is_dir():
@@ -112,7 +116,7 @@ def import_package(archive, appid):
                 if target.exists():
                     if target.read_bytes()==content:continue
                     # Reusing a manifest gid with different bytes must never corrupt another game.
-                    raise RuntimeError("Existing Manifest has different content:"+name)
+                    raise ManifestConflictError("Existing Manifest has different content:"+name)
                 temp=stage/name;temp.write_bytes(content);temp.chmod(0o600);temp.replace(target);written.append(target)
             if lua_path.exists():backups[lua_path]=lua_path.read_bytes()
             temp=stage/(appid+'.lua');temp.write_bytes(script);temp.chmod(0o600);temp.replace(lua_path);published=True
