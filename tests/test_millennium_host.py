@@ -24,7 +24,7 @@ class MillenniumHostTests(unittest.TestCase):
             root = Path(temporary)
             listener = socket.socket(socket.AF_UNIX)
             listener.bind(str(root/'parent.sock')); listener.listen(1); listener.settimeout(15)
-            env = dict(os.environ, WIRED_TEST_OFFLINE='1', XDG_RUNTIME_DIR=str(root), XDG_DATA_HOME=str(root/'data'))
+            env = dict(os.environ, HOME=str(root), WIRED_TEST_OFFLINE='1', XDG_RUNTIME_DIR=str(root), XDG_DATA_HOME=str(root/'data'))
             for key in ('LD_PRELOAD','LD_AUDIT','LD_LIBRARY_PATH','PYTHONHOME'):
                 env.pop(key, None)
             process = subprocess.Popen([str(HOST), str(root/'parent.sock')], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -75,7 +75,7 @@ class MillenniumHostTests(unittest.TestCase):
                 conn.close();conn=None
                 process.wait(timeout=10)
                 self.assertEqual(process.returncode,0,process.stderr.read().decode())
-                ipc=root/('wired-'+str(process.pid))/'rpc.sock'
+                ipc=root/'.local/share/wired-millennium/ipc'/('wired-'+str(process.pid))/'rpc.sock'
                 deadline=time.monotonic()+5
                 while ipc.exists() and time.monotonic()<deadline:time.sleep(.05)
                 self.assertFalse(ipc.exists(),'Service socket survived Lua host shutdown')
