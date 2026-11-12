@@ -34,8 +34,18 @@ stop_steam() {
   die 'Steam did not close within 90 seconds. Close any running games and retry; no process was force-killed.'
 }
 start_steam() {
-  say 'Starting Steam...'
-  "$STEAM_CMD" >/dev/null 2>&1 </dev/null &
+  local launcher="$STEAM_CMD"
+  local sls_root="$HOME/.local/share/SLSsteam"
+  local sls_wrapper="$sls_root/path/steam"
+  if [[ -x "$sls_wrapper" ]]; then
+    [[ -f "$sls_root/SLSsteam.so" && -f "$sls_root/library-inject.so" ]] ||
+      die 'The SLSsteam launcher exists but its injection libraries are missing; refusing to start Steam without SLSsteam.'
+    launcher="$sls_wrapper"
+    say 'Starting Steam through the SLSsteam Moon wrapper...'
+  else
+    say 'Starting Steam with the native launcher (SLSsteam wrapper not installed)...'
+  fi
+  "$launcher" >/dev/null 2>&1 </dev/null &
   disown || true
   for ((attempt=0; attempt<90; attempt++)); do
     if pgrep -u "$(id -u)" -x steam >/dev/null && pgrep -u "$(id -u)" -x steamwebhelper >/dev/null && [[ -f "$MILLENNIUM_CONFIG" ]]; then
