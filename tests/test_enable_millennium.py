@@ -85,7 +85,7 @@ fi
             sls = home/'.local/share/SLSsteam'
             wrapper = sls/'path/steam'
             wrapper.parent.mkdir(parents=True)
-            wrapper.write_text('#!/bin/sh\\nprintf "sls-wrapper\\\\n" >> "$HOME/steam-events"\\nexec "$HOME/bin/steam" "$@"\\n')
+            wrapper.write_text('#!/bin/sh\nprintf "sls-wrapper\\n" >> "$HOME/steam-events"\nexec "$HOME/bin/steam" "$@"\n')
             wrapper.chmod(0o755)
             (sls/'SLSsteam.so').touch()
             (sls/'library-inject.so').touch()
