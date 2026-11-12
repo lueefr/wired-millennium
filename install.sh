@@ -38,9 +38,9 @@ start_steam() {
   "$STEAM_CMD" >/dev/null 2>&1 </dev/null &
   disown || true
   for ((attempt=0; attempt<90; attempt++)); do
-    if pgrep -u "$(id -u)" -x steam >/dev/null && [[ -f "$MILLENNIUM_CONFIG" ]]; then
-      sleep 2
-      if pgrep -u "$(id -u)" -x steam >/dev/null; then return 0; fi
+    if pgrep -u "$(id -u)" -x steam >/dev/null && pgrep -u "$(id -u)" -x steamwebhelper >/dev/null && [[ -f "$MILLENNIUM_CONFIG" ]]; then
+      sleep 3
+      if pgrep -u "$(id -u)" -x steam >/dev/null && pgrep -u "$(id -u)" -x steamwebhelper >/dev/null; then return 0; fi
     fi
     sleep 1
   done
@@ -73,7 +73,7 @@ if ! ((PLUGIN_ONLY)); then
     *' nixos '*) command -v millennium >/dev/null || die 'Enable Millennium using its official NixOS flake first: https://docs.steambrew.app/users/getting-started/installation' ;;
     *) say 'Checking existing tools; install curl, Python 3, git, tar, unzip and 7z with your package manager if needed.' ;;
   esac
-  if command -v millennium >/dev/null || [[ -f /usr/lib/millennium/libmillennium_x86.so || -f $STEAM_ROOT/ubuntu12_32/libmillennium_x86.so ]]; then
+  if command -v millennium >/dev/null || [[ -f /usr/lib/millennium/libmillennium_x64.so || -f /usr/lib/millennium/libmillennium_x86.so || -f $STEAM_ROOT/ubuntu12_32/libmillennium_x86.so ]]; then
     say 'Millennium is already installed.'
   else
     case "$DISTRIBUTION" in
