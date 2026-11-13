@@ -14,7 +14,7 @@ Run the installer as your normal user:
 curl -fsSL https://raw.githubusercontent.com/lueefr/wired-millennium/main/install.sh | bash
 ```
 
-The installer asks Steam to shut down, installs or updates Wired, launches Steam once to initialize Millennium, then stops Steam, enables Wired in Millennium's configuration, and launches Steam again automatically. It does not force-kill Steam; close any running games before installing. Other plugins and their settings are preserved. The previous Millennium configuration is backed up the first time Wired is enabled.
+The installer asks Steam to shut down, installs or updates Wired, launches Steam once to initialize Millennium, then stops Steam, enables Wired in Millennium's configuration, and launches Steam again automatically. If SLSsteam Moon is installed, both launches use its native Steam wrapper (`~/.local/share/SLSsteam/path/steam`) to preserve the injection; an incomplete SLSsteam installation is reported instead of silently bypassed. It does not force-kill Steam; close any running games before installing. Other plugins and their settings are preserved. The previous Millennium configuration is backed up the first time Wired is enabled.
 
 The installer detects your distribution, checks native Steam and Millennium, installs missing prerequisites, and installs **Millennium → SLSsteam Moon → CloudRedirect → Wired**. Existing Millennium installations are kept. Arch-based distributions use `yay`, `paru`, or the AUR build workflow; other supported distributions use Millennium's official installer. NixOS users must enable the [official flake](https://docs.steambrew.app/users/getting-started/installation) first.
 
