@@ -181,6 +181,16 @@ def snapshot(after=0, limit=300):
         entries = [entry.copy() for entry in _events if entry['id'] > after]
         if after == 0 or len(entries) > limit:
             entries = entries[-limit:]
+        # Stay below the private RPC response size even for long tracebacks.
+        selected = []
+        budget = 750 * 1024
+        for entry in reversed(entries):
+            size = len(entry['message'].encode('utf-8')) + len(entry['source']) + 160
+            if size > budget:
+                break
+            selected.append(entry)
+            budget -= size
+        entries = list(reversed(selected))
         return {
             'entries': entries, 'cursor': _serial, 'sources': sources,
             'runtime': {'python': platform.python_version(), 'pid': os.getpid(),
