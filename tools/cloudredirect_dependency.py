@@ -103,10 +103,33 @@ def prepare(info,directory):
                                      for filename in FILES}}
 
 
+def current(info):
+    """Reuse an intact already-installed version instead of rebuilding on reinstall."""
+    receipt = ROOT/'cloudredirect.json'
+    if not receipt.is_file():
+        return None
+    try:
+        record = json.loads(receipt.read_text())
+        if record.get('repository') != REPOSITORY or record.get('version') != info['version'] or record.get('commit') != info['commit']:
+            return None
+        root = Path.home()/'.local/share/CloudRedirect'
+        verify(root)
+        for filename in FILES:
+            path = root/filename
+            if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != record['sha256'][filename]:
+                return None
+        return record
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 def install(info=None, directory=None):
     """Install only after preparation succeeds; preserve the old hook on failure."""
     info = info or resolve()
     if directory is None:
+        existing = current(info)
+        if existing:
+            return existing
         with tempfile.TemporaryDirectory(prefix='wired-cloud-') as temporary:
             prepared = Path(temporary)
             receipt = prepare(info,prepared)
