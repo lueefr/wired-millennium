@@ -88,6 +88,8 @@ def prepare(info,directory):
             raise
         license_file = build(info,directory)
         shutil.copy2(license_file,directory/'LICENSE')
+        shutil.rmtree(directory/'source')
+        shutil.rmtree(directory/'build')
         method = 'official-source-x64'
     else:
         fetch('https://raw.githubusercontent.com/'+REPOSITORY+'/'+info['commit']+'/LICENSE',
