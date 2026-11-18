@@ -49,6 +49,18 @@ def resolve():
             'release_notes':release.get('body','')[:12000]}
 
 
+def ensure_posix_header(source):
+    """Declare gethostname for recent GCC builds of official CloudRedirect."""
+    path = Path(source)/'src/common/stats_store.cpp'
+    content = path.read_text()
+    if 'gethostname(' not in content or '#include <unistd.h>' in content:
+        return
+    anchor = '#include <thread>\n'
+    if anchor not in content:
+        raise RuntimeError('CloudRedirect source changed; cannot apply POSIX header fix')
+    path.write_text(content.replace(anchor, anchor+'#include <unistd.h>\n', 1))
+
+
 def build(info, directory):
     """Only build the exact official release commit; never an unpinned branch."""
     directory = Path(directory)
@@ -60,6 +72,7 @@ def build(info, directory):
                             check=True, capture_output=True, text=True).stdout.strip()
     if actual != info['commit']:
         raise RuntimeError('CloudRedirect release tag changed during download')
+    ensure_posix_header(source)
     subprocess.run(['cmake','-S',str(source),'-B',str(output),
                     '-DCMAKE_BUILD_TYPE=Release','-DLINUX_32BIT=OFF',
                     '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'],check=True)
