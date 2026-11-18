@@ -257,7 +257,9 @@ class BackendTests(unittest.TestCase):
                         'browser_download_url':'https://example.test/deps.tar.gz','updated_at':'now'}]}
             if '/commits/' in path:return {'sha':'abc123'}
             return {'default_branch':'main'}
-        with patch.object(components,'api',side_effect=fake):
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        import cloudredirect_dependency
+        with patch.object(components,'api',side_effect=fake),patch.object(cloudredirect_dependency,'api',side_effect=fake):
             result=components.latest()
         self.assertEqual(result['cloudredirect']['repository'],'crghofficial/cloudredirect')
         self.assertEqual(result['cloudredirect']['version'],'v2.6.5')
