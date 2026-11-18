@@ -35,7 +35,7 @@ stop_steam() {
 }
 start_steam() {
   say 'Starting Steam...'
-  "$STEAM_CMD" >/dev/null 2>&1 </dev/null &
+  "$STEAM_START_CMD" >/dev/null 2>&1 </dev/null &
   disown || true
   for ((attempt=0; attempt<90; attempt++)); do
     if pgrep -u "$(id -u)" -x steam >/dev/null && pgrep -u "$(id -u)" -x steamwebhelper >/dev/null && [[ -f "$MILLENNIUM_CONFIG" ]]; then
@@ -47,10 +47,12 @@ start_steam() {
   die 'Steam or the Millennium configuration did not become ready within 90 seconds.'
 }
 STEAM_CMD=''
+STEAM_START_CMD=''
 MILLENNIUM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/millennium/config.json"
 if ! ((DRY_RUN)); then
   STEAM_CMD=$(command -v steam || true)
   [[ -n "$STEAM_CMD" ]] || die 'Native Steam launcher not found in PATH.'
+  STEAM_START_CMD=$STEAM_CMD
   stop_steam
 fi
 # Never guess a Steam path inside a Flatpak/Snap container.
@@ -117,6 +119,12 @@ fi
 OPTIONS=(--update)
 ((PLUGIN_ONLY)) && OPTIONS+=(--plugin-only)
 python3 "$SOURCE_DIRECTORY/install-plugin.py" "${OPTIONS[@]}"
+# Start via the SLSsteam wrapper even if installing its system shim was declined.
+SLS_WRAPPER="$HOME/.local/share/SLSsteam/path/steam"
+if [[ -x $SLS_WRAPPER ]]; then
+  STEAM_START_CMD=$SLS_WRAPPER
+  say 'Using the SLSsteam launcher for Steam startup.'
+fi
 # First launch initializes Millennium's config on new installations.
 say 'Installation complete. Initializing Millennium in Steam...'
 start_steam
