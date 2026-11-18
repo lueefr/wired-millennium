@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install native Millennium, SLSsteam Moon, CloudRedirect and Wired, in that order.
+# Install native Millennium, SLSsteam Moon x64, official CloudRedirect and Wired, in that order.
 # Workflow inspired by swwayps/luatools-moon; independently implemented.
 set -euo pipefail
 REPOSITORY='lueefr/wired-millennium'
@@ -35,7 +35,7 @@ stop_steam() {
 }
 start_steam() {
   say 'Starting Steam...'
-  "$STEAM_CMD" >/dev/null 2>&1 </dev/null &
+  "$STEAM_START_CMD" >/dev/null 2>&1 </dev/null &
   disown || true
   for ((attempt=0; attempt<90; attempt++)); do
     if pgrep -u "$(id -u)" -x steam >/dev/null && pgrep -u "$(id -u)" -x steamwebhelper >/dev/null && [[ -f "$MILLENNIUM_CONFIG" ]]; then
@@ -47,10 +47,12 @@ start_steam() {
   die 'Steam or the Millennium configuration did not become ready within 90 seconds.'
 }
 STEAM_CMD=''
+STEAM_START_CMD=''
 MILLENNIUM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/millennium/config.json"
 if ! ((DRY_RUN)); then
   STEAM_CMD=$(command -v steam || true)
   [[ -n "$STEAM_CMD" ]] || die 'Native Steam launcher not found in PATH.'
+  STEAM_START_CMD=$STEAM_CMD
   stop_steam
 fi
 # Never guess a Steam path inside a Flatpak/Snap container.
@@ -66,12 +68,14 @@ DISTRIBUTION=" ${ID:-} ${ID_LIKE:-} "
 say "Distribution: ${PRETTY_NAME:-${ID:-unknown}}"
 if ! ((PLUGIN_ONLY)); then
   case "$DISTRIBUTION" in
-    *' arch '*) run sudo pacman -S --needed curl python git tar unzip 7zip ;;
-    *' debian '*|*' ubuntu '*) run sudo apt-get update; run sudo apt-get install -y curl python3 git tar unzip p7zip-full ;;
-    *' fedora '*|*' rhel '*) run sudo dnf install -y curl python3 git tar unzip p7zip p7zip-plugins ;;
-    *' suse '*|*' opensuse '*) run sudo zypper --non-interactive install curl python3 git tar unzip 7zip ;;
+    *' arch '*)
+      if command -v yay >/dev/null; then run yay -S --needed curl python git tar unzip 7zip cmake base-devel
+      else run sudo pacman -S --needed curl python git tar unzip 7zip cmake base-devel; fi ;;
+    *' debian '*|*' ubuntu '*) run sudo apt-get update; run sudo apt-get install -y curl python3 git tar unzip p7zip-full cmake build-essential ;;
+    *' fedora '*|*' rhel '*) run sudo dnf install -y curl python3 git tar unzip p7zip p7zip-plugins cmake gcc-c++ make ;;
+    *' suse '*|*' opensuse '*) run sudo zypper --non-interactive install curl python3 git tar unzip 7zip cmake gcc-c++ make ;;
     *' nixos '*) command -v millennium >/dev/null || die 'Enable Millennium using its official NixOS flake first: https://docs.steambrew.app/users/getting-started/installation' ;;
-    *) say 'Checking existing tools; install curl, Python 3, git, tar, unzip and 7z with your package manager if needed.' ;;
+    *) say 'Checking existing tools; install curl, Python 3, git, tar, unzip, 7z, CMake and a C++ compiler with your package manager if needed.' ;;
   esac
   if command -v millennium >/dev/null || [[ -f /usr/lib/millennium/libmillennium_x64.so || -f /usr/lib/millennium/libmillennium_x86.so || -f $STEAM_ROOT/ubuntu12_32/libmillennium_x86.so ]]; then
     say 'Millennium is already installed.'
@@ -102,7 +106,7 @@ if ! ((PLUGIN_ONLY)); then
     esac
   fi
 fi
-if ((DRY_RUN)); then say 'Install SLSsteam Moon, then CloudRedirect, then Wired from the main branch; shut down, start, enable and restart Steam automatically. No release is required.'; exit 0; fi
+if ((DRY_RUN)); then say 'Install Rafie SLSsteam Moon x64, then official CloudRedirect, then Wired from the main branch; shut down, start, enable and restart Steam automatically. No release is required.'; exit 0; fi
 for tool in curl python3 git tar unzip; do command -v "$tool" >/dev/null || die "Missing required tool: $tool"; done
 SCRIPT_DIRECTORY=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)
 if [[ -f $SCRIPT_DIRECTORY/install-plugin.py && -f $SCRIPT_DIRECTORY/plugin.json ]]; then
@@ -115,6 +119,12 @@ fi
 OPTIONS=(--update)
 ((PLUGIN_ONLY)) && OPTIONS+=(--plugin-only)
 python3 "$SOURCE_DIRECTORY/install-plugin.py" "${OPTIONS[@]}"
+# Start via the SLSsteam wrapper even if installing its system shim was declined.
+SLS_WRAPPER="$HOME/.local/share/SLSsteam/path/steam"
+if [[ -x $SLS_WRAPPER ]]; then
+  STEAM_START_CMD=$SLS_WRAPPER
+  say 'Using the SLSsteam launcher for Steam startup.'
+fi
 # First launch initializes Millennium's config on new installations.
 say 'Installation complete. Initializing Millennium in Steam...'
 start_steam

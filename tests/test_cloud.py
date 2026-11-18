@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 import threading
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import urllib.error
@@ -50,6 +51,20 @@ class CloudTests(unittest.TestCase):
             self.assertEqual(cli.call_args_list[1].args,('migrate',['folder','r2']))
         self.assertNotIn('private-secret',json.dumps(cloud.status()))
         self.assertTrue(cloud.status()['providers']['r2']['settings']['has_secret'])
+
+    def test_cli_error_is_detailed_but_tokens_are_hidden(self):
+        from diagnostics import drain
+        executable=self.root/'cloud_redirect_cli';executable.touch()
+        drain()
+        output=SimpleNamespace(returncode=7,stdout='{"success":false,"error":"request failed"}',stderr='Authorization: Bearer private-access')
+        with patch.object(cloud,'CLI',executable),patch.object(cloud.subprocess,'run',return_value=output):
+            with self.assertRaises(RuntimeError):
+                cloud.cli('list-remote-app-ids',['gdrive',42])
+        logs=drain()
+        combined='\n'.join(item['message'] for item in logs)
+        self.assertIn('exit=7',combined)
+        self.assertIn('request failed',combined)
+        self.assertNotIn('private-access',combined)
 
     def test_paths_and_local_inventory_match_lumen(self):
         cfg={'provider':'gdrive','token_path':'../../outside'}

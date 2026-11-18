@@ -13,7 +13,7 @@
   const Button=A.DialogButton, Primary=A.DialogButtonPrimary||Button, Field=A.Field;
   const roots=new Map(), documents=new Set();let stopped=false,promptId=null,lastError=null;
   function useWired(){const [,redraw]=R.useState(0);R.useEffect(()=>W.subscribe(()=>redraw(x=>x+1)),[]);return W.getSnapshot();}
-  function report(error){lastError=String(error.message||error);showMessage("Unable to complete",lastError);}
+  function report(error){lastError=String(error.message||error);W.rpc("ReportDiagnostic",{level:"error",message:lastError}).catch(()=>{});showMessage("Unable to complete",lastError);}
   function showMessage(title,text){
     if(A.ConfirmModal&&A.showModal)A.showModal(h(A.ConfirmModal,{strTitle:title,strDescription:text,bAlertDialog:true,strOKButtonText:'OK'}));
     else console.error('[Wired]',title,text);
@@ -168,6 +168,75 @@
       message?h(Field,{label:message}):null);
   }
 
+  function LogsPanel(){
+    const [entries,setEntries]=R.useState([]),[sources,setSources]=R.useState([]),[runtime,setRuntime]=R.useState(null);
+    const [level,setLevel]=R.useState('all'),[origin,setOrigin]=R.useState('all'),[search,setSearch]=R.useState('');
+    const [auto,setAuto]=R.useState(true),[error,setError]=R.useState(''),[updated,setUpdated]=R.useState('');
+    const cursor=R.useRef(0),working=R.useRef(false),mounted=R.useRef(false);
+    async function load(){
+      if(working.current)return;
+      working.current=true;
+      try{
+        const response=await W.rpc('GetDiagnostics',{after:cursor.current,limit:600});
+        if(!mounted.current)return;
+        cursor.current=Number(response.cursor)||0;
+        setEntries(previous=>{
+          const known=new Set(previous.map(item=>item.id));
+          return [...previous,...(response.entries||[]).filter(item=>!known.has(item.id))].slice(-1000);
+        });
+        setSources(response.sources||[]);setRuntime(response.runtime||null);
+        setUpdated(new Date().toLocaleTimeString());setError('');
+      }catch(err){if(mounted.current)setError(String(err.message||err));}
+      finally{working.current=false;}
+    }
+    R.useEffect(()=>{mounted.current=true;load();const timer=setInterval(()=>{if(auto)load();},3000);
+      return()=>{mounted.current=false;clearInterval(timer);};},[auto]);
+    const origins=Array.from(new Set(entries.map(item=>item.source))).sort();
+    const filtered=entries.filter(item=>(level==='all'||(level==='issues'?['error','warning'].includes(item.level):item.level===level))&&
+      (origin==='all'||item.source===origin)&&
+      (!search||[item.message,item.source,item.level,item.time].join(' ').toLowerCase().includes(search.toLowerCase())));
+    const format=item=>`[${new Date(item.time).toLocaleString()}] [${String(item.level).toUpperCase()}] [${item.source}] ${item.message}`;
+    async function copy(){
+      try{
+        const output=filtered.map(format).join('\n');
+        if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(output);
+        else{
+          const field=document.createElement('textarea');field.value=output;document.body.appendChild(field);
+          field.select();const copied=document.execCommand('copy');field.remove();
+          if(!copied)throw Error('Clipboard API unavailable');
+        }
+      }catch(err){showMessage('Unable to copy logs',String(err.message||err));}
+    }
+    const selectStyle={maxWidth:'100%',padding:'0.4em'};
+    return h('div',{'data-wired-logs':true},
+      h(Field,{label:'Unified diagnostic log',description:'Wired, Millennium, CloudRedirect, SLSsteam and Steam Cloud. Entries and source files are read locally and sensitive credentials are redacted.'}),
+      h('div',{style:{display:'flex',gap:'0.5em',flexWrap:'wrap',alignItems:'center',marginBottom:'0.65em'}},
+        ...[['all','All'],['issues','Warnings + errors'],['error','Errors only'],['debug','Debug']].map(([value,label])=>h(Button,{key:value,disabled:level===value,onClick:()=>setLevel(value)},label)),
+        h('select',{value:origin,onChange:event=>setOrigin(event.target.value),'aria-label':'Log source',style:selectStyle},
+          h('option',{value:'all'},'All sources'),...origins.map(value=>h('option',{key:value,value},value))),
+        h('input',{type:'search',placeholder:'Search logs',value:search,onChange:event=>setSearch(event.target.value),'aria-label':'Search logs',style:selectStyle})),
+      h('div',{style:{display:'flex',gap:'0.5em',flexWrap:'wrap',alignItems:'center',marginBottom:'0.65em'}},
+        h(Button,{onClick:action(load)},'Refresh'),
+        h(Button,{onClick:action(copy),disabled:!filtered.length},'Copy filtered logs'),
+        h(Button,{onClick:()=>{setEntries([]);cursor.current=0;}},'Reload recent history'),
+        h(Button,{onClick:()=>setAuto(!auto)},auto?'Auto-refresh ON':'Auto-refresh OFF')),
+      h(Field,{label:`${filtered.length} matching / ${entries.length} loaded · ${sources.length} log files · Last check: ${updated||'Not yet'}`,
+        description:error||'Timestamps are shown in your local time. Original files are never modified.'}),
+      h('div',{role:'log','aria-label':'Wired diagnostic events',
+        style:{maxHeight:'33em',minHeight:'10em',overflowY:'auto',overflowX:'auto',padding:'0.6em',
+               background:'rgba(0,0,0,0.22)',borderRadius:'4px',fontFamily:'monospace',fontSize:'12px'}},
+        ...(filtered.length?filtered.slice(-600).map(item=>h('div',{key:item.id,
+          style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',padding:'0.2em 0',
+                 color:item.level==='error'?'#ffb5b5':item.level==='warning'?'#ffd59a':'inherit'}},format(item))):
+          [h('div',{key:'empty'},error||'No matching events yet. Check source availability below.')])),
+      h('details',{style:{marginTop:'0.6em'}},
+        h('summary',null,'Detected log files and runtime'),
+        runtime?h('pre',{style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}},
+          `Wired: ${runtime.plugin||'unknown'} · Python: ${runtime.python||'unknown'} · Architecture: ${runtime.architecture||'unknown'} · Service PID: ${runtime.pid||'unknown'}\nSteam processes observed: ${runtime.steam?.processes?.map(item=>item.name+' ('+item.pid+')').join(', ')||'none'}\nLoaded libraries (observed PIDs): SLSsteam [${runtime.steam?.mapped?.slssteam?.join(', ')||'none'}] · CloudRedirect [${runtime.steam?.mapped?.cloudredirect?.join(', ')||'none'}] · Millennium [${runtime.steam?.mapped?.millennium?.join(', ')||'none'}]`):null,
+        ...sources.map(item=>h('div',{key:item.path,style:{fontFamily:'monospace',fontSize:'12px',overflowWrap:'anywhere'}},
+          `${item.path} (${formatBytes(item.bytes)})`))));
+  }
+
   function Settings(){
     const [tab,setTab]=R.useState('providers');
     useWired();
@@ -189,10 +258,11 @@
     const change=(key,value,immediate=false)=>update({accela_settings:{...current.current.accela_settings,[key]:value}},immediate);
     const Toggle=A.ToggleField;
     const toggle=(key,label,description)=>Toggle?h(Toggle,{key,label,description,checked:Boolean(config.accela_settings[key]),onChange:value=>change(key,value,true)}):null;
-    const tabs=[['providers','Providers'],['downloads','Downloads'],...(integration?.cloudredirect?.installed?[['cloud','Cloud']]:[]),['tools','Tools']];
+    const tabs=[['providers','Providers'],['downloads','Downloads'],...(integration?.cloudredirect?.installed?[['cloud','Cloud']]:[]),['logs','Logs'],['tools','Tools']];
     const navigation=h('div',{role:'tablist','aria-label':'Wired settings',style:{display:'flex',gap:'0.5em',flexWrap:'wrap',marginBottom:'0.75em'}},...tabs.map(([value,label])=>h(Button,{key:value,role:'tab','aria-selected':tab===value,onClick:()=>setTab(value)},label)));
     let content;
-    if(tab==='cloud')content=h(CloudSettings);
+    if(tab==='logs')content=h(LogsPanel);
+    else if(tab==='cloud')content=h(CloudSettings);
     else if(tab==='providers')content=h('div',null,
       h(Field,{label:'Manifest providers',description:'Enabled providers are tried automatically in order. Changes apply automatically.'}),
       h(LuaToolsAccount),
@@ -227,7 +297,7 @@
     R.useEffect(()=>{let active=true;const timer=setInterval(()=>W.rpc('GetComponentUpdates').then(value=>{const entry=value.updates.find(item=>item.component===update.component&&item.revision===update.revision);if(active&&entry)setCurrent(entry);}).catch(err=>{if(active)setError(String(err.message||err));}),2000);return()=>{active=false;clearInterval(timer);};},[update.component,update.revision]);
     const busy=['preparing','queued'].includes(current.decision);
     async function choose(decision){try{await W.rpc('RespondToComponentUpdate',{component:update.component,revision:update.revision,decision});if(decision==='later')onClose();else setCurrent({...current,decision:'preparing'});}catch(err){setError(String(err.message||err));}}
-    const title=update.component==='slssteam'?'SLSsteam Moon':'CloudRedirect Moon';
+    const title=update.component==='slssteam'?'SLSsteam Moon x64':'CloudRedirect';
     const status=current.decision==='preparing'?'Downloading and verifying the update…':current.decision==='queued'?'Update ready. Close Steam to install it, then reopen Steam.':current.decision==='installed'?'Update installed. Restart Steam to load it.':current.decision==='error'?current.error:!current.installable?'The source code changed, but no new installable binary has been published.':'Install this update? Files are verified first and installed only after Steam closes.';
     return h(A.ModalRoot,{onCancel:()=>busy||current.decision==='installed'?onClose():choose('later')},h(A.DialogHeader||'h2',null,title+' — '+update.version),
       h(A.DialogBody||'div',null,h(Field,{label:'Component update available',description:status}),

@@ -18,7 +18,7 @@ from components import ROOT, api, fetch, request, write_json
 from diagnostics import emit, redact
 
 HOURS=(1,7,13,19)
-REPOSITORIES={'slssteam':'swwayps/slsteam-moon','cloudredirect':'swwayps/cloudredirect-moon'}
+REPOSITORIES={'slssteam':'Rafie-kun/slsteam-moon','cloudredirect':'crghofficial/cloudredirect'}
 STOP=threading.Event()
 
 
@@ -79,12 +79,12 @@ def snapshot(component):
                     result['artifact']={'url':asset['browser_download_url'],'checksum_url':checksum['browser_download_url'],'asset':asset['name'],'version':release['tag_name']}
                     result['artifact_id']=str(asset['id'])+':'+asset.get('updated_at','')+':'+checksum.get('updated_at','')
     else:
-        blobs={}
-        for filename in ('cloud_redirect.so','cloud_redirect_cli','LICENSE'):
-            item=optional(repository+'/contents/'+filename+'?ref='+tip['sha'])
-            if item:blobs[filename]=item['sha']
-        if len(blobs)==3:
-            result.update(artifact={'commit':tip['sha'],'blobs':blobs},artifact_id=hashlib.sha256(json.dumps({name:blobs[name] for name in ('cloud_redirect.so','cloud_redirect_cli')},sort_keys=True).encode()).hexdigest(),version=tip['sha'][:10])
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        from cloudredirect_dependency import resolve
+        release=resolve()
+        result.update(version=release['version'],release_notes=release['release_notes'],
+                      release_url=release['release_url'],artifact=release,
+                      artifact_id=hashlib.sha256(json.dumps(release['assets'],sort_keys=True).encode()).hexdigest())
     result['revision']=hashlib.sha256(json.dumps({'commit':result['commit'],'artifact_id':result.get('artifact_id')},sort_keys=True).encode()).hexdigest()
     return result
 
@@ -114,11 +114,11 @@ def check(now=None):
             with Locked():
                 value=state();record=value['repositories'].setdefault(component,{})
                 old=record.get('observed')
-            changed=old is not None and (old['commit']!=fresh['commit'] or old.get('artifact_id')!=fresh.get('artifact_id'))
+            changed=old is not None and (old.get('repository')!=repository or old['commit']!=fresh['commit'] or old.get('artifact_id')!=fresh.get('artifact_id'))
             known=installed_version(component)
-            missing_update=old is None and known and fresh.get('artifact') and known!=fresh.get('version') and not (component=='cloudredirect' and known==fresh['artifact'].get('commit'))
+            missing_update=old is None and known and fresh.get('artifact') and known!=fresh.get('version')
             if changed or missing_update:
-                notes=changelog(repository,old['commit'] if old else known if component=='cloudredirect' else None,fresh['commit'])
+                notes=changelog(repository,old['commit'] if old and old.get('repository')==repository else None,fresh['commit'])
                 if not notes:notes=[fresh.get('release_notes') or fresh['title']]
                 with Locked():
                     value=state();record=value['repositories'].setdefault(component,{})
@@ -192,11 +192,11 @@ def prepare(component,target):
             verify_arch(binaries+list((stage/'release').rglob('library-inject.so')))
             plan={**artifact,'repository':REPOSITORIES[component],'sha256':expected}
         else:
-            for filename,blob in artifact['blobs'].items():
-                fetch(f"https://raw.githubusercontent.com/{REPOSITORIES[component]}/{artifact['commit']}/{filename}",stage/filename)
-                content=(stage/filename).read_bytes()
-                if hashlib.sha1(b'blob '+str(len(content)).encode()+b'\0'+content).hexdigest()!=blob:raise ValueError('Upstream artifact verification failed')
-            verify_arch([stage/'cloud_redirect.so',stage/'cloud_redirect_cli']);plan=artifact
+            sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+            from cloudredirect_dependency import prepare as prepare_cloud
+            prepare_cloud(artifact,stage)
+            verify_arch([stage/'cloud_redirect.so',stage/'cloud_redirect_cli'])
+            plan=artifact
         plan['files']={str(path.relative_to(stage)):hashlib.sha256(path.read_bytes()).hexdigest() for path in stage.rglob('*') if path.is_file()}
         write_json(stage/'plan.json',plan)
         if directory.exists():shutil.rmtree(directory)
@@ -276,20 +276,9 @@ def apply_pending():
                     install(info=plan,archive_path=directory/'release.zip')
                 else:
                     verify_arch([directory/'cloud_redirect.so',directory/'cloud_redirect_cli'])
-                    destination=Path.home()/'.local/share/CloudRedirect';destination.mkdir(parents=True,exist_ok=True)
-                    backups={}
-                    try:
-                        for filename in ('cloud_redirect.so','cloud_redirect_cli','LICENSE'):
-                            target=destination/filename
-                            backups[filename]=target.read_bytes() if target.exists() else None
-                            if target.exists():shutil.copy2(target,target.with_suffix(target.suffix+'.wired-backup'))
-                            temporary=destination/(filename+'.wired-new');shutil.copy2(directory/filename,temporary);temporary.chmod(0o644 if filename=='LICENSE' else 0o755);temporary.replace(target)
-                        write_json(ROOT/'cloudredirect.json',{'version':plan['commit'],'sha256':{name:plan['files'][name] for name in backups},'restart_required':True})
-                    except Exception:
-                        for filename,content in backups.items():
-                            if content is None:(destination/filename).unlink(missing_ok=True)
-                            else:(destination/filename).write_bytes(content)
-                        raise
+                    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+                    from cloudredirect_dependency import install as install_cloud
+                    install_cloud(info=plan,directory=directory)
                 with Locked():
                     value=state();current=value['repositories'][component]['pending']
                     if current['revision']==pending['revision']:current.update(decision='installed');save(value)

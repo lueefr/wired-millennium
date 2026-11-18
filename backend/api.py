@@ -162,3 +162,16 @@ def GetComponentUpdates(**kwargs):
 def RespondToComponentUpdate(component,revision,decision,**kwargs):
     from updates import respond
     return json.dumps(respond(component,revision,decision))
+
+
+def GetDiagnostics(after=0, limit=300, **kwargs):
+    from diagnostics import snapshot
+    return json.dumps(snapshot(after, limit), ensure_ascii=False)
+
+
+def ReportDiagnostic(message, level='error', **kwargs):
+    from diagnostics import emit
+    if not isinstance(message, str) or len(message) > 5000 or level not in ('error', 'warning', 'info'):
+        raise ValueError('Invalid diagnostic event')
+    emit(message, level, source='Wired Frontend')
+    return json.dumps({'success': True})

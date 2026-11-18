@@ -10,10 +10,13 @@ import struct
 import sys
 import threading
 import time
+import traceback
 from diagnostics import emit, drain
 
+AUDIT = {'SaveSettings', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudAuthorize', 'CloudDiscard', 'RespondToComponentUpdate', 'Shutdown'}
+
 MAX_REQUEST = 2*1024*1024
-METHODS = {'GetComponentUpdates', 'RespondToComponentUpdate', 'GetLanguage', 'GetSettings', 'SaveSettings', 'GetStatus', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'GetIntegrationState', 'GetLuaToolsAuthStatus', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudStatus', 'CloudAuthorize', 'CloudAuthPoll', 'CloudDiscard'}
+METHODS = {'GetComponentUpdates', 'RespondToComponentUpdate', 'GetLanguage', 'GetSettings', 'SaveSettings', 'GetDiagnostics', 'ReportDiagnostic', 'GetStatus', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'GetIntegrationState', 'GetLuaToolsAuthStatus', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudStatus', 'CloudAuthorize', 'CloudAuthPoll', 'CloudDiscard'}
 
 
 def exchange(directory, payload):
@@ -48,6 +51,7 @@ def serve(directory, parent):
     import api
     import updates
     updates.start()
+    emit(f'Wired service started: pid={os.getpid()}, parent={parent}', 'info', 'Wired Service')
     class Handler(socketserver.StreamRequestHandler):
         def handle(self):
             uid = struct.unpack('3i', self.request.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))[1]
@@ -59,6 +63,9 @@ def serve(directory, parent):
                 return
             shutdown = False
             method = "request"
+            started = time.monotonic()
+            failed_exception = False
+            args = {}
             try:
                 payload = json.loads(raw)
                 method = payload['method']
@@ -75,10 +82,15 @@ def serve(directory, parent):
                 else:
                     raise ValueError("Method not allowed")
             except Exception as exc:
+                failed_exception = True
+                emit(method+': '+type(exc).__name__+': '+str(exc)+'\n'+traceback.format_exc(limit=10), 'error', 'Wired Service')
                 value = {'success': False, 'error': str(exc)}
             if isinstance(value, dict):
-                if value.get('success') is False:
-                    emit(method+': '+str(value.get('error', "Operation refused")), 'error')
+                if value.get('success') is False and not failed_exception and method != 'GetDiagnostics':
+                    emit(method+': '+str(value.get('error', "Operation refused")), 'error', 'Wired RPC')
+                elif value.get('success') is not False and method in AUDIT:
+                    fields=', '.join(sorted(args)) if args else 'none'
+                    emit(f'RPC {method}: completed in {time.monotonic()-started:.3f}s; fields={fields}', 'info', 'Wired RPC')
                 value['_wired_logs'] = drain()
             self.wfile.write(json.dumps(value, ensure_ascii=False).encode()+b'\n')
             self.wfile.flush()

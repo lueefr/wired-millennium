@@ -20,6 +20,7 @@ import urllib.parse
 import urllib.request
 
 from moon import steam_root
+from diagnostics import emit, redact
 from steam_paths import vdf
 
 CONFIG=Path.home()/'.config/CloudRedirect/config.json'
@@ -100,18 +101,26 @@ def clean_env():
 
 def cli(command,args=(),timeout=90):
     if not CLI.is_file():raise RuntimeError("CloudRedirect CLI not installed")
-    result=subprocess.run([str(CLI),command,*map(str,args)],env=clean_env(),stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=timeout)
+    started=time.monotonic()
+    try:
+        result=subprocess.run([str(CLI),command,*map(str,args)],env=clean_env(),stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=timeout)
+    except subprocess.TimeoutExpired:
+        emit(f'CLI {command}: timed out after {timeout}s', 'error', 'CloudRedirect CLI')
+        raise
     records=[]
     for line in result.stdout.splitlines():
         try:value=json.loads(line)
         except ValueError:continue
         if isinstance(value,dict):records.append(value)
-    if command=='migrate':
-        last=next((item for item in reversed(records) if item.get('type')=='complete'),None)
-        if result.returncode or not last or last.get('failed')!=0:raise RuntimeError("Migration not completed; the previous configuration will be preserved")
-        return last
-    last=records[-1] if records else {}
-    if result.returncode or last.get('success') is not True:raise RuntimeError("CloudRedirect provider did not complete the operation")
+    last=next((item for item in reversed(records) if item.get('type')=='complete'),None) if command=='migrate' else (records[-1] if records else {})
+    failed=(result.returncode!=0 or not last or (last.get('failed')!=0 if command=='migrate' else last.get('success') is not True))
+    duration=time.monotonic()-started
+    if failed:
+        safe={key:last[key] for key in ('type','success','failed','error','message','code','http_status','status') if key in last}
+        emit(f'CLI {command}: failed exit={result.returncode}, elapsed={duration:.2f}s, details={redact(json.dumps(safe, ensure_ascii=False))}, stderr={redact(result.stderr[-1400:])}', 'error', 'CloudRedirect CLI')
+        if command=='migrate':raise RuntimeError("Migration not completed; the previous configuration will be preserved")
+        raise RuntimeError("CloudRedirect provider did not complete the operation")
+    emit(f'CLI {command}: completed exit={result.returncode}, elapsed={duration:.2f}s', 'info', 'CloudRedirect CLI')
     return last
 
 
@@ -224,6 +233,7 @@ def apply(request,restart=schedule_restart):
     if provider not in PROVIDERS or type(request.get('sync_activity')) is not bool:raise ValueError("Invalid cloud configuration")
     with LOCK:
         cfg=config();source=cfg.get('provider','local');snapshots={CONFIG:CONFIG.read_bytes() if CONFIG.exists() else None}
+        emit(f'Cloud settings update: from={source} to={provider}, migration={request.get("migrate") is True}, stats_sync={request["sync_activity"]}', 'info', 'CloudRedirect')
         def snapshot(path):
             if path not in snapshots:snapshots[path]=path.read_bytes() if path.exists() else None
         try:
@@ -253,12 +263,14 @@ def apply(request,restart=schedule_restart):
             if provider in ('r2','s3'):cli('list-remote-app-ids',[provider,0])
             if request.get('migrate') is True and source!=provider and source!='local' and provider!='local':cli('migrate',[source,provider],timeout=1800)
             if restart() is not True:raise RuntimeError("Unable to restart Steam")
-        except Exception:
+        except Exception as error:
+            emit(f'Cloud settings rollback: {type(error).__name__}: {error}', 'error', 'CloudRedirect')
             for path,body in reversed(list(snapshots.items())):
                 if body is None:path.unlink(missing_ok=True)
                 else:atomic(path,body)
             raise
         discard()
+        emit(f'Cloud settings applied: provider={provider}, Steam restart requested', 'info', 'CloudRedirect')
         return {'success':True,'restarting':True}
 
 

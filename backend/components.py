@@ -13,7 +13,7 @@ import zipfile
 import uuid
 
 ROOT = Path(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share'))) / 'wired-millennium'
-REPOS = {'accela': 'ciscosweater/enter-the-wired', 'cloudredirect': 'swwayps/cloudredirect-moon'}
+REPOS = {'accela': 'ciscosweater/enter-the-wired', 'cloudredirect': 'crghofficial/cloudredirect'}
 
 
 def request(url, headers=None):
@@ -60,10 +60,12 @@ def latest():
         if checksum:
             with request(checksum['browser_download_url']) as response:
                 result[name]['expected_sha256'] = response.read(16384).decode().split()[0].lower()
-    for name in ('accela', 'cloudredirect'):
-        repo = api(REPOS[name])
-        commit = api(REPOS[name] + '/commits/' + repo['default_branch'])['sha']
-        result.setdefault(name, {})['commit' if name == 'accela' else 'version'] = commit
+    repo = api(REPOS['accela'])
+    result['accela']['commit'] = api(REPOS['accela'] + '/commits/' + repo['default_branch'])['sha']
+    import sys
+    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+    from cloudredirect_dependency import resolve
+    result['cloudredirect'] = resolve()
     return result
 
 
@@ -108,10 +110,10 @@ def prepare(progress=lambda message: None):
                 folder.mkdir()
                 files = {}
                 if name == 'cloudredirect':
-                    for filename in ('cloud_redirect.so', 'cloud_redirect_cli', 'LICENSE'):
-                        url = f"https://raw.githubusercontent.com/{REPOS[name]}/{info['version']}/{filename}"
-                        files[filename] = fetch(url, folder/filename)
-                        (folder/filename).chmod(0o755 if filename != 'LICENSE' else 0o644)
+                    import sys
+                    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+                    from cloudredirect_dependency import prepare as prepare_cloud
+                    files.update(prepare_cloud(info,folder)['sha256'])
                 else:
                     files[info['asset']] = fetch(info['url'], folder/info['asset'], info.get('expected_sha256'))
                     if name == 'accela':
@@ -142,15 +144,10 @@ def install():
                     raise RuntimeError('Prepared artifact was modified: ' + name)
         from runtime import ensure_runtime
         ensure_runtime(print)
-        dest = Path.home()/'.local/share/CloudRedirect'
-        dest.mkdir(parents=True, exist_ok=True)
-        for filename in ('cloud_redirect.so', 'cloud_redirect_cli', 'LICENSE'):
-            target = dest/filename
-            if target.exists():
-                shutil.copy2(target, target.with_suffix(target.suffix+'.wired-backup'))
-            stage = dest/(filename+'.wired-new')
-            shutil.copy2(bundle/'cloudredirect'/filename, stage)
-            stage.replace(target)
+        import sys
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        from cloudredirect_dependency import install as install_cloud
+        install_cloud(manifest['components']['cloudredirect'],bundle/'cloudredirect')
         configure_cloud()
         write_json(ROOT/'installed.json', manifest)
         print("Engine and CloudRedirect prepared. slsteam-moon is installed by the plugin installer.")
@@ -176,28 +173,25 @@ def configure_cloud():
 
 def update_cloud(progress=lambda message: None):
     import fcntl
+    import sys
     ROOT.mkdir(parents=True, exist_ok=True)
     with (ROOT/'cloud.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        repo = api(REPOS['cloudredirect'])
-        commit = api(REPOS['cloudredirect']+'/commits/'+repo['default_branch'])['sha']
-        destination = Path.home()/'.local/share/CloudRedirect'
-        destination.mkdir(parents=True, exist_ok=True)
-        hashes = {}
-        with tempfile.TemporaryDirectory(dir=destination) as temporary:
-            stage = Path(temporary)
-            for filename in ('cloud_redirect.so','cloud_redirect_cli','LICENSE'):
-                progress("Preparing CloudRedirect")
-                hashes[filename] = fetch(f"https://raw.githubusercontent.com/{REPOS['cloudredirect']}/{commit}/{filename}",stage/filename)
-                (stage/filename).chmod(0o644 if filename=='LICENSE' else 0o755)
-            for filename in hashes:
-                target = destination/filename
-                if target.exists():
-                    shutil.copy2(target,target.with_suffix(target.suffix+'.wired-backup'))
-                (stage/filename).replace(target)
+        if subprocess.run(['pgrep','-x','steam'],stdout=subprocess.DEVNULL).returncode==0 or subprocess.run(['pgrep','-x','steamwebhelper'],stdout=subprocess.DEVNULL).returncode==0:
+            raise RuntimeError('Close Steam before installing CloudRedirect')
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        from cloudredirect_dependency import resolve, prepare as prepare_cloud, install as install_cloud, current as current_cloud
+        info = resolve()
+        existing = current_cloud(info)
+        if existing:
+            progress('Official CloudRedirect '+info['version']+' is already installed')
+            configure_cloud()
+            return existing
+        with tempfile.TemporaryDirectory(prefix='wired-cloud-',dir=ROOT) as temporary:
+            progress('Preparing official CloudRedirect '+info['version'])
+            prepare_cloud(info,temporary)
+            result = install_cloud(info,temporary)
         configure_cloud()
-        result = {'version':commit,'sha256':hashes,'restart_required':True}
-        write_json(ROOT/'cloudredirect.json',result)
         return result
 
 

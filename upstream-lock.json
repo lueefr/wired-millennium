@@ -11,21 +11,27 @@
     }
   },
   "slssteam": {
-    "version": "v2.9",
-    "asset": "slsteam-moon-linux-2.9-lumen.zip",
-    "url": "https://github.com/swwayps/slsteam-moon/releases/download/v2.9/slsteam-moon-linux-2.9-lumen.zip",
-    "updated_at": "2026-10-22T15:49:48Z",
-    "expected_sha256": "c05d2328c9902673295cd76c2e299dc853ab760fd470d67d15377e5c10995c72",
+    "version": "v3.1",
+    "asset": "slsteam-moon-linux-3.1.zip",
+    "url": "https://github.com/Rafie-kun/slsteam-moon/releases/download/v3.1/slsteam-moon-linux-3.1.zip",
+    "repository": "Rafie-kun/slsteam-moon",
+    "commit": "aa95ab589bf714f593483f5a5fcbe428ebb9c4a3",
+    "updated_at": "2026-11-16T17:30:09Z",
+    "expected_sha256": "441ef36620aa6cb7444dfc915d10554d7d5218f942b72f65701bae522a5c7202",
     "sha256": {
-      "slsteam-moon-linux-2.9-lumen.zip": "c05d2328c9902673295cd76c2e299dc853ab760fd470d67d15377e5c10995c72"
+      "slsteam-moon-linux-3.1.zip": "441ef36620aa6cb7444dfc915d10554d7d5218f942b72f65701bae522a5c7202"
     }
   },
   "cloudredirect": {
-    "version": "19da05507dc8294a744d74c04ba875d4ca3cf2f7",
-    "sha256": {
-      "cloud_redirect.so": "1395cc78939b9e349cc58471cd4c8a18654dec3d1629db7334f4b238172e6bae",
-      "cloud_redirect_cli": "f4d8e3f60c2f7a22f55523797584150d975bbe8e506c6e2c6256787123146c64",
-      "LICENSE": "e5d6554459e7f15943217b05aa33c2fddd6c8f9bbd1704d772b29963a1ddc951"
-    }
+    "version": "v2.6.5",
+    "repository": "crghofficial/cloudredirect",
+    "commit": "bc5e38a156ff123e47ec07abf67158160c50a50e",
+    "release_url": "https://github.com/crghofficial/cloudredirect/releases/tag/v2.6.5",
+    "updated_at": "2026-10-23T17:27:42Z",
+    "release_sha256": {
+      "cloud_redirect.so": "af9dbe1a53eceaa3710902d6694c477ec2abbae271d712bdb95e40686bca22c2",
+      "cloud_redirect_cli": "839398e7da55bd8830dabf623542c46e74d0f1fea4cf551601a244965f89782d"
+    },
+    "note": "Official Linux release ELF must be validated; 32-bit artifacts trigger an x64 build from the pinned upstream release source."
   }
 }

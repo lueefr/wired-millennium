@@ -15,7 +15,7 @@ TZ=timezone(timedelta(hours=-3))
 
 
 def target(revision='one',artifact='binary-one'):
-    return {'revision':revision,'commit':revision,'version':'v1','title':'Fix compatibility','repository':'swwayps/cloudredirect-moon','url':'https://github.com/swwayps/cloudredirect-moon','artifact':{'commit':revision,'blobs':{}},'artifact_id':artifact}
+    return {'revision':revision,'commit':revision,'version':'v1','title':'Fix compatibility','repository':'crghofficial/cloudredirect','url':'https://github.com/crghofficial/cloudredirect','artifact':{'repository':'crghofficial/cloudredirect','version':'v1','commit':revision,'assets':{}},'artifact_id':artifact}
 
 
 class UpdateTests(unittest.TestCase):
@@ -41,7 +41,7 @@ class UpdateTests(unittest.TestCase):
 
     def test_editing_release_notes_does_not_repeat_the_same_version(self):
         repository={'default_branch':'main'};tip={'sha':'f'*40,'commit':{'message':'Fix compatibility'}}
-        release={'tag_name':'v1','html_url':'https://github.com/swwayps/slsteam-moon/releases/tag/v1','body':'Original notes','assets':[{'id':1,'name':'linux.zip','browser_download_url':'https://example.test/linux.zip','updated_at':'2026-11-12'},{'id':2,'name':'linux.zip.sha256','browser_download_url':'https://example.test/linux.zip.sha256','updated_at':'2026-11-12'}]}
+        release={'tag_name':'v1','html_url':'https://github.com/Rafie-kun/slsteam-moon/releases/tag/v1','body':'Original notes','assets':[{'id':1,'name':'linux.zip','browser_download_url':'https://example.test/linux.zip','updated_at':'2026-11-12'},{'id':2,'name':'linux.zip.sha256','browser_download_url':'https://example.test/linux.zip.sha256','updated_at':'2026-11-12'}]}
         edited={**release,'body':'Corrected release description'}
         with patch.object(updates,'api',side_effect=[repository,tip,release,repository,tip,edited]):
             first=updates.snapshot('slssteam');second=updates.snapshot('slssteam')
@@ -88,30 +88,35 @@ class UpdateTests(unittest.TestCase):
         with patch.object(updates,'steam_arch',return_value=64):
             with self.assertRaisesRegex(ValueError,'architecture'):updates.verify_arch([binary])
 
-    def test_staging_checks_blob_integrity_and_does_not_install(self):
-        content=bytearray(20);content[:4]=b'\x7fELF';content[4]=2;content[18:20]=(62).to_bytes(2,'little');content=bytes(content)
-        files={'cloud_redirect.so':content,'cloud_redirect_cli':content,'LICENSE':b'MIT'}
-        blobs={name:hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest() for name,body in files.items()}
-        candidate=target();candidate['artifact']['blobs']=blobs
-        def fetch(url,path,*args):path.write_bytes(files[path.name])
-        with patch.object(updates,'fetch',side_effect=fetch),patch.object(updates,'steam_arch',return_value=64):
+    def cloud_fixture(self):
+        binary=bytearray(20);binary[:4]=b'\x7fELF';binary[4]=2;binary[18:20]=(62).to_bytes(2,'little')
+        data={'cloud_redirect.so':bytes(binary),'cloud_redirect_cli':bytes(binary),'LICENSE':b'MIT'}
+        candidate=target()
+        def prepare(info,directory):
+            for name,body in data.items():(Path(directory)/name).write_bytes(body)
+            return {'sha256':{name:hashlib.sha256(body).hexdigest() for name,body in data.items()}}
+        return data,candidate,prepare
+
+    def test_staging_checks_official_artifact_and_does_not_install(self):
+        data,candidate,prepare=self.cloud_fixture()
+        import cloudredirect_dependency
+        with patch.object(cloudredirect_dependency,'prepare',side_effect=prepare),patch.object(updates,'steam_arch',return_value=64):
             directory=updates.prepare('cloudredirect',candidate)
-        self.assertTrue((directory/'plan.json').exists());self.assertTrue((directory/'cloud_redirect.so').exists())
+        self.assertTrue((directory/'plan.json').exists())
+        self.assertEqual((directory/'cloud_redirect.so').read_bytes(),data['cloud_redirect.so'])
         self.assertFalse((self.root/'cloudredirect.json').exists(),'Staging must not change installed receipts')
 
     def test_approved_cloud_update_installs_only_verified_staged_files(self):
-        content=bytearray(20);content[:4]=b'\x7fELF';content[4]=2;content[18:20]=(62).to_bytes(2,'little');content=bytes(content)
-        files={'cloud_redirect.so':content,'cloud_redirect_cli':content,'LICENSE':b'MIT'}
-        blobs={name:hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest() for name,body in files.items()}
-        candidate=target();candidate['artifact']['blobs']=blobs
-        def fetch(url,path,*args):path.write_bytes(files[path.name])
-        with patch.object(updates,'fetch',side_effect=fetch),patch.object(updates,'steam_arch',return_value=64):directory=updates.prepare('cloudredirect',candidate)
+        data,candidate,prepare=self.cloud_fixture()
+        import cloudredirect_dependency
+        with patch.object(cloudredirect_dependency,'prepare',side_effect=prepare),patch.object(updates,'steam_arch',return_value=64):
+            directory=updates.prepare('cloudredirect',candidate)
         destination=self.root/'home/.local/share/CloudRedirect';destination.mkdir(parents=True)
         (destination/'cloud_redirect.so').write_bytes(b'previous library')
         value=updates.state();value['repositories']['cloudredirect']={'pending':{'revision':'one','decision':'queued','directory':str(directory)}};updates.save(value)
-        with patch.object(updates,'steam_running',return_value=False),patch.object(updates,'steam_arch',return_value=64),patch.object(updates.Path,'home',return_value=self.root/'home'):
+        with patch.object(updates,'steam_running',return_value=False),patch.object(updates,'steam_arch',return_value=64),patch.object(updates.Path,'home',return_value=self.root/'home'),patch.object(cloudredirect_dependency,'ROOT',self.root):
             self.assertTrue(updates.apply_pending())
-        self.assertEqual((destination/'cloud_redirect.so').read_bytes(),content)
+        self.assertEqual((destination/'cloud_redirect.so').read_bytes(),data['cloud_redirect.so'])
         self.assertEqual((destination/'cloud_redirect.so.wired-backup').read_bytes(),b'previous library')
         self.assertEqual(updates.state()['repositories']['cloudredirect']['pending']['decision'],'installed')
         (directory/'cloud_redirect.so').write_bytes(b'modified')
@@ -119,7 +124,7 @@ class UpdateTests(unittest.TestCase):
         with patch.object(updates,'steam_running',return_value=False),patch.object(updates.Path,'home',return_value=self.root/'home'):
             updates.apply_pending()
         self.assertEqual(updates.state()['repositories']['cloudredirect']['pending']['decision'],'error')
-        self.assertEqual((destination/'cloud_redirect.so').read_bytes(),content)
+        self.assertEqual((destination/'cloud_redirect.so').read_bytes(),data['cloud_redirect.so'])
 
     def test_running_steam_blocks_installation(self):
         with patch.object(updates,'steam_running',return_value=True):self.assertFalse(updates.apply_pending())

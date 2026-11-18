@@ -44,6 +44,7 @@ if(method==='StartLuaToolsLogin')return {success:true,auth_url:'https://db.lua.t
 if(method==='CloudStatus')return {installed:true,provider:'local',sync_activity:false,providers:{local:{authenticated:false},folder:{settings:{sync_folder_path:''}},gdrive:{},onedrive:{},r2:{settings:{}},s3:{settings:{}}}};
 if(method==='CloudAuthorize')return {auth_url:'https://accounts.google.com/oauth',status:'waiting'};
 if(method==='CloudAuthPoll')return {status:'waiting'};
+if(method==='GetDiagnostics')return {cursor:2,entries:[{id:1,time:'2026-11-18T16:00:00Z',source:'CloudRedirect / cloud_redirect.log',level:'error',message:'Cloud upload failed (HTTP 503)'},{id:2,time:'2026-11-18T16:00:01Z',source:'Millennium / plugin.log',level:'warning',message:'Plugin reconnecting'}],sources:[{source:'CloudRedirect / cloud_redirect.log',path:'/tmp/cloud_redirect.log',bytes:42}],runtime:{plugin:'Wired 0.8.0',python:'3.14',architecture:'x86_64',pid:123}};
 if(method==='GetSettings')return {api_list:[],accela_settings:{morrenus_api_key:'',max_downloads:16}};
 if(method==='SaveSettings'){if(window.failSave)throw Error('Disk write failed');return {success:true};}
 if(method==='StartTask'){if(args.action==='manifest_import')window.added=true;const result=args.action==='cloud_apps'?{accounts:[{id:42,name:'Example'}],apps:[{appid:123,account:42,files:1,size:1024}]}:args.action==='cloud_apply'?{success:true,restarting:true}:args.action==='fixes_catalog'?{name:'Example',fixes:[{id:'12345678-1234-1234-1234-123456789012',title:'Example Fix',hasFix:true,hasManifest:false}]}:{message:'Fix applied.'};const task={id:'task'+tasks.length,action:args.action,status:'done',result};tasks.push(task);return {success:true,job_id:task.id};}
@@ -104,6 +105,12 @@ return {success:true};
   await click('Sign in to lua.tools');
   await until(()=>evaluate(`calls.some(c=>c.method==='OpenURL'&&c.url.includes('provider=discord'))`),'Login browser did not open');
   assert.equal(await evaluate(`document.querySelector('#settings-test').textContent.includes('Complete Discord login')`),true);
+  await click('Logs');
+  await until(()=>evaluate(`Boolean(document.querySelector('#settings-test [data-wired-logs] [role=log]')?.textContent.includes('Cloud upload failed'))`),'Cloud errors not visible in Wired Logs');
+  assert.equal(await evaluate(`document.querySelector('#settings-test [role=log]').textContent.includes('Plugin reconnecting')`),true,'Millennium warning missing');
+  await click('Errors only');
+  await until(()=>evaluate(`!document.querySelector('#settings-test [role=log]').textContent.includes('Plugin reconnecting')`),'Log severity filtering failed');
+  await click('All');
   await click('Tools');
   await evaluate(`document.querySelector('#settings-test details').open=true`);
   await evaluate(`const article=[...document.querySelectorAll('#settings-test article')].find(node=>node.querySelector('h4')?.textContent==='Package AppID');const appInput=article.querySelector('input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(appInput,'123');appInput.dispatchEvent(new Event('input',{bubbles:true}))`);

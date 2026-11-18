@@ -1,0 +1,32 @@
+name: CloudRedirect x64 source check
+on:
+  push:
+    paths:
+      - 'tools/cloudredirect_dependency.py'
+      - 'tests/test_cloud_dependency.py'
+      - '.github/workflows/cloudredirect-x64.yml'
+  pull_request:
+    paths:
+      - 'tools/cloudredirect_dependency.py'
+      - '.github/workflows/cloudredirect-x64.yml'
+permissions:
+  contents: read
+jobs:
+  cloudredirect-x64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ make git
+      - name: Build the pinned official source as x86_64
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v2.6.5 https://github.com/crghofficial/cloudredirect.git /tmp/cloudredirect
+          test "$(git -C /tmp/cloudredirect rev-parse HEAD)" = "bc5e38a156ff123e47ec07abf67158160c50a50e"
+          PYTHONPATH=backend:tools python3 -c "from pathlib import Path; import cloudredirect_dependency as cd; cd.ensure_posix_header(Path('/tmp/cloudredirect'))"
+          cmake -S /tmp/cloudredirect -B /tmp/cloudredirect-build -DCMAKE_BUILD_TYPE=Release -DLINUX_32BIT=OFF
+          cmake --build /tmp/cloudredirect-build --target cloud_redirect cloud_redirect_cli --parallel 2
+          test "$(od -An -tx1 -j4 -N1 /tmp/cloudredirect-build/cloud_redirect.so | tr -d '[:space:]')" = 02
+          test "$(od -An -tx1 -j4 -N1 /tmp/cloudredirect-build/cloud_redirect_cli | tr -d '[:space:]')" = 02
