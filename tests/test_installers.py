@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -10,17 +11,27 @@ ROOT=Path(__file__).resolve().parents[1]
 
 class InstallerTests(unittest.TestCase):
     def test_distribution_plans(self):
-        cases=[('arch','', 'pacman'),('endeavouros','arch','pacman'),('ubuntu','debian','apt-get'),('fedora','','dnf'),('opensuse-tumbleweed','suse','zypper')]
+        cases=[('arch','','yay'),('endeavouros','arch','yay'),('ubuntu','debian','apt-get'),('fedora','','dnf'),('opensuse-tumbleweed','suse','zypper')]
         with tempfile.TemporaryDirectory() as temp:
-            base=Path(temp)
+            base=Path(temp);bin_dir=base/'bin';bin_dir.mkdir()
+            (bin_dir/'uname').symlink_to(shutil.which('uname'))
+            yay=bin_dir/'yay';yay.write_text('#!/bin/sh\nexit 0\n');yay.chmod(0o755)
+            env=dict(os.environ,PATH=str(bin_dir))
             for distro,related,expected in cases:
                 release=base/'os-release';release.write_text(f'ID={distro}\nID_LIKE="{related}"\n')
                 script=base/'install.sh';script.write_text((ROOT/'install.sh').read_text().replace('/etc/os-release',str(release)))
-                result=subprocess.run(['bash',str(script),'--dry-run'],capture_output=True,text=True)
+                result=subprocess.run(['/bin/bash',str(script),'--dry-run'],env=env,capture_output=True,text=True)
                 self.assertEqual(result.returncode,0,result.stderr)
                 self.assertIn(expected,result.stdout)
                 self.assertIn('SLSsteam Moon',result.stdout)
                 self.assertIn('CloudRedirect',result.stdout)
+
+            # Without yay the package setup must fall back to pacman.
+            yay.unlink()
+            release.write_text('ID=arch\nID_LIKE=""\n')
+            result=subprocess.run(['/bin/bash',str(script),'--dry-run'],env=env,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('sudo pacman -S --needed',result.stdout)
 
     def test_uninstall_preserves_shared_components_and_data(self):
         with tempfile.TemporaryDirectory() as temp:
