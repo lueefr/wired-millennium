@@ -180,8 +180,13 @@ def update_cloud(progress=lambda message: None):
         if subprocess.run(['pgrep','-x','steam'],stdout=subprocess.DEVNULL).returncode==0 or subprocess.run(['pgrep','-x','steamwebhelper'],stdout=subprocess.DEVNULL).returncode==0:
             raise RuntimeError('Close Steam before installing CloudRedirect')
         sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-        from cloudredirect_dependency import resolve, prepare as prepare_cloud, install as install_cloud
+        from cloudredirect_dependency import resolve, prepare as prepare_cloud, install as install_cloud, current as current_cloud
         info = resolve()
+        existing = current_cloud(info)
+        if existing:
+            progress('Official CloudRedirect '+info['version']+' is already installed')
+            configure_cloud()
+            return existing
         with tempfile.TemporaryDirectory(prefix='wired-cloud-',dir=ROOT) as temporary:
             progress('Preparing official CloudRedirect '+info['version'])
             prepare_cloud(info,temporary)
