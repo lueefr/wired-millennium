@@ -66,12 +66,14 @@ DISTRIBUTION=" ${ID:-} ${ID_LIKE:-} "
 say "Distribution: ${PRETTY_NAME:-${ID:-unknown}}"
 if ! ((PLUGIN_ONLY)); then
   case "$DISTRIBUTION" in
-    *' arch '*) run sudo pacman -S --needed curl python git tar unzip 7zip ;;
-    *' debian '*|*' ubuntu '*) run sudo apt-get update; run sudo apt-get install -y curl python3 git tar unzip p7zip-full ;;
-    *' fedora '*|*' rhel '*) run sudo dnf install -y curl python3 git tar unzip p7zip p7zip-plugins ;;
-    *' suse '*|*' opensuse '*) run sudo zypper --non-interactive install curl python3 git tar unzip 7zip ;;
+    *' arch '*)
+      if command -v yay >/dev/null; then run yay -S --needed curl python git tar unzip 7zip cmake base-devel
+      else run sudo pacman -S --needed curl python git tar unzip 7zip cmake base-devel; fi ;;
+    *' debian '*|*' ubuntu '*) run sudo apt-get update; run sudo apt-get install -y curl python3 git tar unzip p7zip-full cmake build-essential ;;
+    *' fedora '*|*' rhel '*) run sudo dnf install -y curl python3 git tar unzip p7zip p7zip-plugins cmake gcc-c++ make ;;
+    *' suse '*|*' opensuse '*) run sudo zypper --non-interactive install curl python3 git tar unzip 7zip cmake gcc-c++ make ;;
     *' nixos '*) command -v millennium >/dev/null || die 'Enable Millennium using its official NixOS flake first: https://docs.steambrew.app/users/getting-started/installation' ;;
-    *) say 'Checking existing tools; install curl, Python 3, git, tar, unzip and 7z with your package manager if needed.' ;;
+    *) say 'Checking existing tools; install curl, Python 3, git, tar, unzip, 7z, CMake and a C++ compiler with your package manager if needed.' ;;
   esac
   if command -v millennium >/dev/null || [[ -f /usr/lib/millennium/libmillennium_x64.so || -f /usr/lib/millennium/libmillennium_x86.so || -f $STEAM_ROOT/ubuntu12_32/libmillennium_x86.so ]]; then
     say 'Millennium is already installed.'
