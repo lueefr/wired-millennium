@@ -32,12 +32,12 @@ class DiagnosticsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             directory=Path(tmp)
             source=directory/'cloud_redirect.log'
-            source.write_text('[CR] loaded\\nERROR Cloud upload failed: access_token="private-value"\\n')
+            source.write_text('[CR] loaded\nERROR Cloud upload failed: access_token="private-value"\n')
             secret=directory/'tokens.json';secret.write_text('private-json-data')
             linked=directory/'linked.log';linked.symlink_to(secret)
-            with patch.object(diagnostics,'_roots',return_value=[('CloudRedirect',directory,'component')]), \\
-                 patch.object(diagnostics,'_cursors',{}), \\
-                 patch.object(diagnostics,'_events',deque(maxlen=2500)), \\
+            with patch.object(diagnostics,'_roots',return_value=[('CloudRedirect',directory,'component')]), \
+                 patch.object(diagnostics,'_cursors',{}), \
+                 patch.object(diagnostics,'_events',deque(maxlen=2500)), \
                  patch.object(diagnostics,'_serial',0):
                 first=diagnostics.snapshot(0,100)
                 self.assertEqual(len(first['entries']),2)
@@ -47,22 +47,22 @@ class DiagnosticsTests(unittest.TestCase):
                 self.assertNotIn('private-json-data',str(first))
                 cursor=first['cursor']
                 self.assertEqual(diagnostics.snapshot(cursor,100)['entries'],[])
-                with source.open('a') as log:log.write('WARNING sync retry\\n')
+                with source.open('a') as log:log.write('WARNING sync retry\n')
                 second=diagnostics.snapshot(cursor,100)
                 self.assertEqual(len(second['entries']),1)
                 self.assertEqual(second['entries'][0]['level'],'warning')
                 cursor=second['cursor']
                 rotated=directory/'cloud_redirect.old';source.rename(rotated)
-                source.write_text('ERROR new log rotation\\n')
+                source.write_text('ERROR new log rotation\n')
                 third=diagnostics.snapshot(cursor,100)
                 self.assertEqual(len(third['entries']),1)
                 self.assertIn('rotation',third['entries'][0]['message'])
 
     def test_diagnostics_redacts_json_secrets_and_preserves_history(self):
         drain()
-        with patch.object(diagnostics,'_roots',return_value=[]), \\
-             patch.object(diagnostics,'_cursors',{}), \\
-             patch.object(diagnostics,'_events',deque(maxlen=2500)), \\
+        with patch.object(diagnostics,'_roots',return_value=[]), \
+             patch.object(diagnostics,'_cursors',{}), \
+             patch.object(diagnostics,'_events',deque(maxlen=2500)), \
              patch.object(diagnostics,'_serial',0):
             emit('Cloud sync failed: {"refresh_token":"secret-abc","password": "pass123"}', 'error','Cloud')
             forwarded=drain()
