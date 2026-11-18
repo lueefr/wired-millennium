@@ -11,7 +11,7 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'backend'))
 from components import ROOT, api, fetch, extract_zip, write_json
 
-REPOSITORY = 'swwayps/slsteam-moon'
+REPOSITORY = 'Rafie-kun/slsteam-moon'
 
 
 def resolve():
@@ -32,11 +32,13 @@ def resolve():
 
 def install(info=None,archive_path=None):
     info = info or resolve()
+    if info.get('repository') != REPOSITORY:
+        raise ValueError('SLSsteam release repository mismatch')
     binary = Path.home()/'.local/share/SLSsteam/SLSsteam.so'
     receipt = ROOT/'dependencies/slsteam-moon.json'
     if receipt.exists() and binary.is_file():
         old = json.loads(receipt.read_text())
-        if old.get('version') == info['version'] and old.get('sha256') == info['sha256'] and old.get('binary_sha256') == hashlib.sha256(binary.read_bytes()).hexdigest():
+        if old.get('repository') == REPOSITORY and old.get('version') == info['version'] and old.get('sha256') == info['sha256'] and old.get('binary_sha256') == hashlib.sha256(binary.read_bytes()).hexdigest() and binary.read_bytes()[:5] == b'\x7fELF\x02':
             print("slsteam-moon dependency already installed:", info['version'])
             return info
     for name in ('steam', 'steamwebhelper'):
@@ -64,6 +66,11 @@ def install(info=None,archive_path=None):
         setups = list((temp/'release').glob('*/setup.sh'))
         if len(setups) != 1:
             raise RuntimeError("Incompatible slsteam-moon installer layout")
+        release_dir = setups[0].parent
+        for filename in ('SLSsteam.so','library-inject.so'):
+            payload = release_dir/'bin'/filename
+            if not payload.is_file() or payload.read_bytes()[:5] != b'\x7fELF\x02':
+                raise RuntimeError('slsteam-moon release is not ELF64: '+filename)
         env = os.environ.copy()
         for key in ('LD_AUDIT','LD_PRELOAD','LD_LIBRARY_PATH','STEAM_RUNTIME_LIBRARY_PATH'):
             env.pop(key,None)
