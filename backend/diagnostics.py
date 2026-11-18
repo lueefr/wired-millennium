@@ -150,6 +150,7 @@ def _scan():
             with path.open('rb') as stream:
                 stream.seek(offset)
                 data = stream.read(_MAX_READ)
+                consumed = len(data)
         except OSError:
             continue
         if offset > 0 and not carry and (not previous or previous[0] != identity or stat.st_size-previous[1] > _MAX_READ):
@@ -157,7 +158,7 @@ def _scan():
         chunk = carry+data
         lines = chunk.split(b'\n')
         tail = lines.pop()
-        _cursors[key] = (identity, offset+len(data)+(0 if not (offset > 0 and not carry) else 0), tail[-_MAX_LINE:])
+        _cursors[key] = (identity, offset+consumed, tail[-_MAX_LINE:])
         for line in lines:
             value = line.decode('utf-8', errors='replace').strip('\r')
             if value.strip():
