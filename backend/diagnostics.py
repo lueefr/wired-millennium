@@ -132,7 +132,8 @@ def _discover():
 def _scan():
     sources = []
     active = set()
-    for _, source, path, stat in _discover():
+    # Process older source files first, keeping the newest failures visible in the ring.
+    for _, source, path, stat in reversed(_discover()):
         key = str(path)
         active.add(key)
         label = source+' / '+path.name
