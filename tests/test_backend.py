@@ -247,16 +247,22 @@ class BackendTests(unittest.TestCase):
 
     def test_latest_selects_assets_and_pins_cloud_commit(self):
         def fake(path):
+            if path == 'crghofficial/cloudredirect/releases/latest':
+                return {'tag_name':'v2.6.5','html_url':'https://github.com/crghofficial/cloudredirect/releases/tag/v2.6.5',
+                        'assets':[{'name':name,'id':n,'digest':'sha256:'+'a'*64,
+                                   'browser_download_url':'https://example.test/'+name}
+                                  for n,name in enumerate(('cloud_redirect.so','cloud_redirect_cli'),1)]}
             if path.endswith('/releases/latest'):
-                name = 'deps.tar.gz' if path.startswith('ciscosweater') else 'slsteam-moon-linux-v1.zip'
-                return {'tag_name': 'v1', 'assets': [{'name': name, 'browser_download_url': 'https://example.test/'+name, 'updated_at': 'now'}]}
-            if '/commits/' in path:
-                return {'sha': 'abc123'}
-            return {'default_branch': 'main'}
-        with patch.object(components, 'api', side_effect=fake):
-            result = components.latest()
-        self.assertEqual(result['cloudredirect']['version'], 'abc123')
-        self.assertEqual(result['accela']['commit'], 'abc123')
+                return {'tag_name':'latest','assets':[{'name':'deps.tar.gz',
+                        'browser_download_url':'https://example.test/deps.tar.gz','updated_at':'now'}]}
+            if '/commits/' in path:return {'sha':'abc123'}
+            return {'default_branch':'main'}
+        with patch.object(components,'api',side_effect=fake):
+            result=components.latest()
+        self.assertEqual(result['cloudredirect']['repository'],'crghofficial/cloudredirect')
+        self.assertEqual(result['cloudredirect']['version'],'v2.6.5')
+        self.assertEqual(result['cloudredirect']['commit'],'abc123')
+        self.assertEqual(result['accela']['commit'],'abc123')
 
 
 if __name__ == '__main__':
