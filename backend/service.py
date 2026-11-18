@@ -10,10 +10,11 @@ import struct
 import sys
 import threading
 import time
+import traceback
 from diagnostics import emit, drain
 
 MAX_REQUEST = 2*1024*1024
-METHODS = {'GetComponentUpdates', 'RespondToComponentUpdate', 'GetLanguage', 'GetSettings', 'SaveSettings', 'GetStatus', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'GetIntegrationState', 'GetLuaToolsAuthStatus', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudStatus', 'CloudAuthorize', 'CloudAuthPoll', 'CloudDiscard'}
+METHODS = {'GetComponentUpdates', 'RespondToComponentUpdate', 'GetLanguage', 'GetSettings', 'SaveSettings', 'GetDiagnostics', 'ReportDiagnostic', 'GetStatus', 'StartDownload', 'StartTask', 'PrepareComponents', 'ReplyPrompt', 'Cancel', 'Pause', 'Resume', 'MoveJob', 'GetIntegrationState', 'GetLuaToolsAuthStatus', 'StartLuaToolsLogin', 'CancelLuaToolsLogin', 'LogoutLuaTools', 'CloudStatus', 'CloudAuthorize', 'CloudAuthPoll', 'CloudDiscard'}
 
 
 def exchange(directory, payload):
@@ -75,10 +76,11 @@ def serve(directory, parent):
                 else:
                     raise ValueError("Method not allowed")
             except Exception as exc:
+                emit(method+': '+type(exc).__name__+': '+str(exc)+'\n'+traceback.format_exc(limit=10), 'error', 'Wired Service')
                 value = {'success': False, 'error': str(exc)}
             if isinstance(value, dict):
-                if value.get('success') is False:
-                    emit(method+': '+str(value.get('error', "Operation refused")), 'error')
+                if value.get('success') is False and method != 'GetDiagnostics':
+                    emit(method+': '+str(value.get('error', "Operation refused")), 'error', 'Wired RPC')
                 value['_wired_logs'] = drain()
             self.wfile.write(json.dumps(value, ensure_ascii=False).encode()+b'\n')
             self.wfile.flush()
