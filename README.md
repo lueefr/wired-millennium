@@ -58,13 +58,13 @@ Controls inherit Steam's current theme. An external ACCELA job is displayed insi
 
 ## Component update notifications
 
-Wired checks **SLSsteam Moon** and **CloudRedirect Moon** at **01:00, 07:00, 13:00 and 19:00**, using the computer's local timezone. A persistent user-systemd timer works while Steam is closed; the plugin provides a fallback while Steam is open when systemd activation is unavailable.
+Wired checks **SLSsteam Moon x64** and **CloudRedirect** at **01:00, 07:00, 13:00 and 19:00**, using the computer's local timezone. A persistent user-systemd timer works while Steam is closed; the plugin provides a fallback while Steam is open when systemd activation is unavailable.
 
 Missed checks coalesce into one catch-up check. If the computer returns at **22:45**, Wired checks once at **22:45**, then again at **01:00**. The schedule is never shifted to six hours after the catch-up. A shared slot record prevents duplicate checks between the timer and plugin. At initial setup, the monitor records a baseline and compares known installed versions.
 
 The plugin monitors the default branch and published binary artifacts through GitHub's API rather than cloning full repositories. New revisions produce a native Steam dialog with the changelog. **Later** is remembered for that revision; a newer revision replaces the previous pending notification. Changes to source without a new binary are shown as source-only updates and cannot be installed as though a binary existed.
 
-**Download update** is explicit consent to prepare that component. Checksums, staged file integrity and ELF/CPU architecture are verified before installation. Installation waits for Steam to close; it does not stop games or restart Steam automatically. Existing cloud libraries are backed up. SLSsteam is updated through its upstream installer. A 32-bit artifact is rejected for a 64-bit Steam client; this monitor does not port incompatible components.
+**Download update** is explicit consent to prepare that component. Checksums, staged file integrity and ELF/CPU architecture are verified before installation. Installation waits for Steam to close; it does not stop games or restart Steam automatically. Existing cloud libraries are backed up. SLSsteam is updated through its upstream installer. A 32-bit SLSsteam artifact is rejected for a 64-bit Steam client. For the official CloudRedirect, the installer checks each release ELF, then builds the pinned official source natively as x86_64 if its release binaries are 32-bit. This requires Git, CMake and a C++20 toolchain. Binary compatibility and cloud synchronization must still be confirmed in a running Steam client. The SLSsteam Moon wrapper also has its own release updater; see the upstream documentation for its opt-out.
 
 When Steam is closed, notices wait until the plugin opens again. Monitor errors appear in Millennium logs when the plugin is running; scheduled checks also have a user journal:
 
@@ -121,8 +121,8 @@ Optional integration tests use a locally installed Millennium Lua host plus `msg
 
 - [Millennium](https://github.com/SteamClientHomebrew/Millennium) — Steam plugin host and native UI SDK.
 - [enter-the-wired / ACCELA](https://github.com/ciscosweater/enter-the-wired) — downloaded and prepared on demand.
-- [SLSsteam Moon](https://github.com/swwayps/slsteam-moon) — separately installed dependency.
-- [CloudRedirect Moon](https://github.com/swwayps/cloudredirect-moon) — native cloud hook and CLI.
+- [SLSsteam Moon](https://github.com/Rafie-kun/slsteam-moon) — separately installed dependency.
+- [CloudRedirect](https://github.com/crghofficial/cloudredirect) — native cloud hook and CLI.
 - [LuaTools Moon](https://github.com/swwayps/luatools-moon) and [Lumen](https://github.com/swwayps/lumen) — integration, installer workflow, account and cloud behavior references.
 - [Cyberia](https://github.com/rafaelcarpeta/cyberia) — original feature inspiration.
 
