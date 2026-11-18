@@ -198,8 +198,13 @@
     const format=item=>`[${new Date(item.time).toLocaleString()}] [${String(item.level).toUpperCase()}] [${item.source}] ${item.message}`;
     async function copy(){
       try{
-        if(!navigator.clipboard?.writeText)throw Error('Clipboard API unavailable');
-        await navigator.clipboard.writeText(filtered.map(format).join('\n'));
+        const output=filtered.map(format).join('\n');
+        if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(output);
+        else{
+          const field=document.createElement('textarea');field.value=output;document.body.appendChild(field);
+          field.select();const copied=document.execCommand('copy');field.remove();
+          if(!copied)throw Error('Clipboard API unavailable');
+        }
       }catch(err){showMessage('Unable to copy logs',String(err.message||err));}
     }
     const selectStyle={maxWidth:'100%',padding:'0.4em'};
@@ -227,7 +232,7 @@
       h('details',{style:{marginTop:'0.6em'}},
         h('summary',null,'Detected log files and runtime'),
         runtime?h('pre',{style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}},
-          `Wired: ${runtime.plugin||'unknown'} · Python: ${runtime.python||'unknown'} · Architecture: ${runtime.architecture||'unknown'} · Service PID: ${runtime.pid||'unknown'}`):null,
+          `Wired: ${runtime.plugin||'unknown'} · Python: ${runtime.python||'unknown'} · Architecture: ${runtime.architecture||'unknown'} · Service PID: ${runtime.pid||'unknown'}\nSteam processes observed: ${runtime.steam?.processes?.map(item=>item.name+' ('+item.pid+')').join(', ')||'none'}\nLoaded libraries (observed PIDs): SLSsteam [${runtime.steam?.mapped?.slssteam?.join(', ')||'none'}] · CloudRedirect [${runtime.steam?.mapped?.cloudredirect?.join(', ')||'none'}] · Millennium [${runtime.steam?.mapped?.millennium?.join(', ')||'none'}]`):null,
         ...sources.map(item=>h('div',{key:item.path,style:{fontFamily:'monospace',fontSize:'12px',overflowWrap:'anywhere'}},
           `${item.path} (${formatBytes(item.bytes)})`))));
   }
