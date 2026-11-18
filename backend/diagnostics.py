@@ -83,6 +83,8 @@ def _roots():
         ('CloudRedirect', config/'CloudRedirect/logs', 'all'),
         ('SLSsteam', config/'SLSsteam', 'component'),
         ('SLSsteam', data/'SLSsteam', 'component'),
+        ('SLSsteam', data/'SLSsteam/logs', 'all'),
+        ('Lumen', data/'Lumen', 'component'),
         ('Steam Cloud', data/'Steam/logs', 'steam'),
         ('Wired', own, 'wired'),
         ('Wired Service', own/'ipc', 'ipc'),
@@ -94,7 +96,7 @@ def _allowed(path, mode):
     if mode == 'component':
         return (name.endswith(('.log', '.log.txt')) or name in ('cloud_log.txt', 'cr_debug.txt'))
     if mode == 'steam':
-        return name in ('cloud_log.txt', 'cloud_log.log', 'cef_log.txt')
+        return name in ('cloud_log.txt', 'cloud_log.log', 'cef_log.txt', 'console_log.txt', 'webhelper.txt')
     if mode == 'wired':
         return name in ('component-update-worker.log', 'wired.log', 'service.log')
     if mode == 'ipc':
@@ -170,6 +172,39 @@ def _scan():
     return sources
 
 
+def _steam_state():
+    """Best-effort read-only loader state for Steam processes owned by this user."""
+    active = []
+    libraries = {'slssteam': [], 'cloudredirect': [], 'millennium': []}
+    try:
+        processes = Path('/proc').iterdir()
+        for process in processes:
+            if not process.name.isdecimal():
+                continue
+            try:
+                if process.stat().st_uid != os.getuid():
+                    continue
+                name = (process/'comm').read_text().strip()
+                if name not in ('steam', 'steamwebhelper'):
+                    continue
+                pid = int(process.name)
+                active.append({'pid': pid, 'name': name})
+                with (process/'maps').open('r', errors='replace') as stream:
+                    mapped = {'slssteam': False, 'cloudredirect': False, 'millennium': False}
+                    for line in stream:
+                        mapped['slssteam'] |= '/SLSsteam.so' in line
+                        mapped['cloudredirect'] |= '/cloud_redirect.so' in line
+                        mapped['millennium'] |= '/libmillennium_' in line
+                for key, found in mapped.items():
+                    if found:
+                        libraries[key].append(pid)
+            except (OSError, ValueError):
+                continue
+    except OSError:
+        pass
+    return {'processes': active[:32], 'mapped': libraries}
+
+
 def snapshot(after=0, limit=300):
     """Read only allowlisted log files and return a bounded incremental view."""
     if type(after) is not int or after < 0:
@@ -194,6 +229,7 @@ def snapshot(after=0, limit=300):
         return {
             'entries': entries, 'cursor': _serial, 'sources': sources,
             'runtime': {'python': platform.python_version(), 'pid': os.getpid(),
-                        'architecture': platform.machine(), 'plugin': 'Wired 0.8.0'},
+                        'architecture': platform.machine(), 'plugin': 'Wired 0.8.0',
+                        'steam': _steam_state()},
             'total_retained': len(_events)
         }
