@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install native Millennium, SLSsteam Moon, CloudRedirect and Wired, in that order.
+# Install native Millennium, SLSsteam Moon x64, official CloudRedirect and Wired, in that order.
 # Workflow inspired by swwayps/luatools-moon; independently implemented.
 set -euo pipefail
 REPOSITORY='lueefr/wired-millennium'
@@ -102,7 +102,7 @@ if ! ((PLUGIN_ONLY)); then
     esac
   fi
 fi
-if ((DRY_RUN)); then say 'Install SLSsteam Moon, then CloudRedirect, then Wired from the main branch; shut down, start, enable and restart Steam automatically. No release is required.'; exit 0; fi
+if ((DRY_RUN)); then say 'Install Rafie SLSsteam Moon x64, then official CloudRedirect, then Wired from the main branch; shut down, start, enable and restart Steam automatically. No release is required.'; exit 0; fi
 for tool in curl python3 git tar unzip; do command -v "$tool" >/dev/null || die "Missing required tool: $tool"; done
 SCRIPT_DIRECTORY=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)
 if [[ -f $SCRIPT_DIRECTORY/install-plugin.py && -f $SCRIPT_DIRECTORY/plugin.json ]]; then
