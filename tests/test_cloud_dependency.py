@@ -73,6 +73,26 @@ class CloudDependencyTests(unittest.TestCase):
             self.assertFalse((directory/'source').exists())
             cloud.verify(directory)
 
+    def test_gcc16_gethostname_header_is_applied_once(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source=Path(temp)
+            file=source/'src/common/stats_store.cpp'
+            file.parent.mkdir(parents=True)
+            file.write_text('#include <thread>\nvoid test() { gethostname(nullptr, 0); }\n')
+            cloud.ensure_posix_header(source)
+            result=file.read_text()
+            self.assertIn('#include <unistd.h>\n',result)
+            cloud.ensure_posix_header(source)
+            self.assertEqual(file.read_text(),result)
+
+            file.write_text('#include <thread>\nvoid test() {}\n')
+            cloud.ensure_posix_header(source)
+            self.assertNotIn('<unistd.h>',file.read_text())
+
+            file.write_text('void test() { gethostname(nullptr, 0); }\n')
+            with self.assertRaisesRegex(RuntimeError,'source changed'):
+                cloud.ensure_posix_header(source)
+
     def test_rejects_invalid_header_instead_of_building_untrusted_asset(self):
         info=self.info()
         with tempfile.TemporaryDirectory() as temp:
