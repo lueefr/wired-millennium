@@ -227,7 +227,7 @@
     R.useEffect(()=>{let active=true;const timer=setInterval(()=>W.rpc('GetComponentUpdates').then(value=>{const entry=value.updates.find(item=>item.component===update.component&&item.revision===update.revision);if(active&&entry)setCurrent(entry);}).catch(err=>{if(active)setError(String(err.message||err));}),2000);return()=>{active=false;clearInterval(timer);};},[update.component,update.revision]);
     const busy=['preparing','queued'].includes(current.decision);
     async function choose(decision){try{await W.rpc('RespondToComponentUpdate',{component:update.component,revision:update.revision,decision});if(decision==='later')onClose();else setCurrent({...current,decision:'preparing'});}catch(err){setError(String(err.message||err));}}
-    const title=update.component==='slssteam'?'SLSsteam Moon':'CloudRedirect Moon';
+    const title=update.component==='slssteam'?'SLSsteam Moon x64':'CloudRedirect';
     const status=current.decision==='preparing'?'Downloading and verifying the update…':current.decision==='queued'?'Update ready. Close Steam to install it, then reopen Steam.':current.decision==='installed'?'Update installed. Restart Steam to load it.':current.decision==='error'?current.error:!current.installable?'The source code changed, but no new installable binary has been published.':'Install this update? Files are verified first and installed only after Steam closes.';
     return h(A.ModalRoot,{onCancel:()=>busy||current.decision==='installed'?onClose():choose('later')},h(A.DialogHeader||'h2',null,title+' — '+update.version),
       h(A.DialogBody||'div',null,h(Field,{label:'Component update available',description:status}),
