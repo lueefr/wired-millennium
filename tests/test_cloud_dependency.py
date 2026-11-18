@@ -91,6 +91,9 @@ class CloudDependencyTests(unittest.TestCase):
             (destination/'cloud_redirect.so').write_bytes(b'previous')
             with patch.object(cloud.Path,'home',return_value=home),patch.object(cloud,'ROOT',base):
                 receipt=cloud.install(info,stage)
+                with patch.object(cloud,'prepare') as prepare:
+                    self.assertEqual(cloud.install(info),receipt)
+                    prepare.assert_not_called()
             self.assertEqual(receipt['version'],info['version'])
             self.assertEqual((destination/'cloud_redirect.so.wired-backup').read_bytes(),b'previous')
             self.assertEqual((destination/'cloud_redirect.so').read_bytes(),binary(64))
